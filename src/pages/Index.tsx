@@ -8,8 +8,11 @@ import { GoogleSheetsService, SalesData } from '@/services/googleSheetsService';
 import { ParetoAnalysisService } from '@/services/paretoAnalysisService';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, BarChart3, Wifi, WifiOff } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Header } from '@/components/Header';
 
 const Index = () => {
+  const { user } = useAuth();
   // State management
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -66,26 +69,42 @@ const Index = () => {
       
       setGoogleSheetsService(service);
       setRawData(data);
-      setFilteredData(data);
-      setIsConnected(true);
       
       // Build filter options
+      const allVendedores = GoogleSheetsService.extractUniqueValues(data, 'vendedor');
+      const vendedoresOptions = user && user.role === 'vendedor' && user.vendedor 
+        ? [user.vendedor] // Se for vendedor, mostrar apenas seu próprio nome
+        : allVendedores;   // Se for admin, mostrar todos
+      
       setFilterOptions({
         clientes: GoogleSheetsService.extractUniqueValues(data, 'nomeFantasia'),
         cidades: GoogleSheetsService.extractUniqueValues(data, 'cidade'),
         estados: GoogleSheetsService.extractUniqueValues(data, 'uf'),
         categorias: GoogleSheetsService.extractUniqueValues(data, 'categoria'),
-        vendedores: GoogleSheetsService.extractUniqueValues(data, 'vendedor'),
+        vendedores: vendedoresOptions,
         regionais: GoogleSheetsService.extractUniqueValues(data, 'regional'),
         tiposCliente: GoogleSheetsService.extractUniqueValues(data, 'tipoCliente')
       });
       
-      // Perform initial analysis
-      performAnalysis(data);
+      // Aplicar filtro automático se for vendedor
+      let filteredData = data;
+      let filtersToApply = {};
+      
+      if (user && user.role === 'vendedor' && user.vendedor) {
+        filtersToApply = { vendedor: user.vendedor };
+        filteredData = GoogleSheetsService.filterData(data, filtersToApply);
+        setActiveFilters(filtersToApply);
+      }
+      
+      setFilteredData(filteredData);
+      setIsConnected(true);
+      
+      // Perform initial analysis with filtered data
+      performAnalysis(filteredData);
       
       toast({
         title: "Conexão estabelecida!",
-        description: `${data.length} registros carregados com sucesso.`,
+        description: `${filteredData.length} registros carregados com sucesso.`,
       });
       
     } catch (error) {
@@ -128,14 +147,31 @@ const Index = () => {
   };
 
   // Clear all filters
+  // Clear all filters
   const handleClearFilters = () => {
-    setActiveFilters({});
-    setFilteredData(rawData);
-    performAnalysis(rawData);
+    let clearedFilters = {};
+    
+    // Se o usuário for vendedor, manter o filtro de vendedor
+    if (user && user.role === 'vendedor' && user.vendedor) {
+      clearedFilters = { vendedor: user.vendedor };
+    }
+    
+    setActiveFilters(clearedFilters);
+    
+    // Aplicar os filtros (se houver) aos dados
+    let dataToAnalyze = rawData;
+    if (Object.keys(clearedFilters).length > 0) {
+      dataToAnalyze = GoogleSheetsService.filterData(rawData, clearedFilters);
+    }
+    
+    setFilteredData(dataToAnalyze);
+    performAnalysis(dataToAnalyze);
     
     toast({
       title: "Filtros limpos",
-      description: "Mostrando todos os dados disponíveis.",
+      description: user?.role === 'vendedor' 
+        ? "Filtros limpos. Filtro de vendedor mantido."
+        : "Mostrando todos os dados disponíveis.",
     });
   };
 
@@ -156,44 +192,35 @@ const Index = () => {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Header */}
-      <header className="bg-background border-b shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="https://i.ibb.co/BpTtpvT/logo3.png" alt="logo3" className="h-10" />
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  Sistema de Análise Pareto 80/20
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Análise inteligente de vendas com dados do Google Sheets
-                </p>
-              </div>
-            </div>
-            
-            
-            
-            <div className="flex items-center gap-2">
-              {isConnected ? (
-                <div className="flex items-center gap-2 text-success text-sm font-medium">
-                  <Wifi className="h-4 w-4" />
-                  Conectado
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <WifiOff className="h-4 w-4" />
-                  Não conectado
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+  // Aplicar filtros automáticos baseados no usuário
+  useEffect(() => {
+    if (user && user.role === 'vendedor' && user.vendedor && rawData.length > 0) {
+      // Filtrar automaticamente pelo vendedor logado
+      const newFilters = {
+        ...activeFilters,
+        vendedor: user.vendedor
+      };
+      setActiveFilters(newFilters);
+      
+      // Aplicar o filtro imediatamente
+      const filtered = GoogleSheetsService.filterData(rawData, newFilters);
+      setFilteredData(filtered);
+      performAnalysis(filtered);
+      
+    } else if (user && user.role === 'admin') {
+      // Admin tem acesso total, limpar filtros específicos
+      setActiveFilters({});
+      if (rawData.length > 0) {
+        setFilteredData(rawData);
+        performAnalysis(rawData);
+      }
+    }
+  }, [user, rawData]); // Adicionar rawData como dependência
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto p-6 space-y-6">
         {/* Configuration Section */}
         <GoogleSheetsConfig
           onConnect={handleConnect}
@@ -277,7 +304,7 @@ const Index = () => {
             </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 };

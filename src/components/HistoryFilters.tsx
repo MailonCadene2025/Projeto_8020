@@ -2,6 +2,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface HistoryFilterOptions {
   clientes: string[];
@@ -41,6 +42,8 @@ const keyMap: { [key: string]: keyof ActiveHistoryFilters } = {
 };
 
 export const HistoryFilters: React.FC<HistoryFiltersProps> = ({ options, activeFilters, onFilterChange, onApply, onClear }) => {
+  const { user } = useAuth();
+  
   const handleInputChange = (field: keyof ActiveHistoryFilters, value: string) => {
     onFilterChange({ ...activeFilters, [field]: value });
   };
@@ -52,6 +55,9 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({ options, activeF
       {Object.keys(options).map((key) => {
         const filterKey = keyMap[key as keyof typeof keyMap];
         const opts = options[key as keyof HistoryFilterOptions].map(o => ({ value: o, label: o }));
+        const isVendedorField = key === 'vendedores';
+        const shouldDisable = isVendedorField && user?.role === 'vendedor';
+        
         return (
         <Combobox 
           key={key} 
@@ -61,6 +67,7 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({ options, activeF
           placeholder={`Selecionar ${key}`}
           searchPlaceholder="Pesquisar..."
           noResultsMessage="Nenhum resultado encontrado."
+          disabled={shouldDisable}
         />
       )})}
       <Button onClick={onApply}>Aplicar Filtros</Button>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
 import { Badge } from '@/components/ui/badge';
 import { Filter, X, RotateCcw } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface FilterOptions {
   clientes: string[];
@@ -46,6 +47,8 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
   onClearFilters,
   isLoading = false
 }) => {
+  const { user } = useAuth();
+  
   const updateFilter = (key: keyof ActiveFilters, value: string | undefined) => {
     onFilterChange({ ...activeFilters, [key]: value });
   };
@@ -58,7 +61,8 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
     key: keyof ActiveFilters,
     label: string,
     options: string[],
-    placeholder: string
+    placeholder: string,
+    disabled: boolean = false
   ) => {
     const comboboxOptions = [
       { value: "__ALL__", label: "Todos" },
@@ -75,6 +79,7 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
           placeholder={placeholder}
           searchPlaceholder="Pesquisar..."
           noResultsMessage="Nenhum resultado encontrado."
+          disabled={disabled}
         />
       </div>
     );
@@ -124,7 +129,7 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
           {renderSelectField('cidade', 'Cidade', filterOptions.cidades, 'Selecione uma cidade')}
           {renderSelectField('estado', 'Estado', filterOptions.estados, 'Selecione um estado')}
           {renderSelectField('categoria', 'Categoria', filterOptions.categorias, 'Selecione uma categoria')}
-          {renderSelectField('vendedor', 'Vendedor', filterOptions.vendedores, 'Selecione um vendedor')}
+          {renderSelectField('vendedor', 'Vendedor', filterOptions.vendedores, 'Selecione um vendedor', user?.role === 'vendedor')}
           {renderSelectField('regional', 'Regional', filterOptions.regionais, 'Selecione uma regional')}
           {renderSelectField('tipoCliente', 'Tipo Cliente', filterOptions.tiposCliente, 'Selecione um tipo')}
         </div>

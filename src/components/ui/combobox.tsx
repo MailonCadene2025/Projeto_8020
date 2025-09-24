@@ -31,6 +31,7 @@ interface ComboboxProps {
   placeholder?: string;
   searchPlaceholder?: string;
   noResultsMessage?: string;
+  disabled?: boolean;
 }
 
 export function Combobox({ 
@@ -39,7 +40,8 @@ export function Combobox({
   onChange, 
   placeholder,
   searchPlaceholder,
-  noResultsMessage
+  noResultsMessage,
+  disabled = false
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -51,6 +53,7 @@ export function Combobox({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          disabled={disabled}
         >
           {value
             ? options.find((option) => option.value === value)?.label
@@ -58,34 +61,36 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command>
-          <CommandInput placeholder={searchPlaceholder || "Search..."} />
-          <CommandList>
-            <CommandEmpty>{noResultsMessage || "No results found."}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
+      {!disabled && (
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+          <Command>
+            <CommandInput placeholder={searchPlaceholder || "Search..."} />
+            <CommandList>
+              <CommandEmpty>{noResultsMessage || "No results found."}</CommandEmpty>
+              <CommandGroup>
+                {options.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    value={option.value}
+                    onSelect={(currentValue) => {
+                      onChange(currentValue === value ? "" : currentValue)
+                      setOpen(false)
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === option.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {option.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      )}
     </Popover>
   )
 }
