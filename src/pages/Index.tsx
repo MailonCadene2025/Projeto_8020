@@ -36,7 +36,8 @@ const Index = () => {
     totalSales: 0,
     topClientsCount: 0,
     topClientsPercentage: 0,
-    totalClients: 0
+    totalClients: 0,
+    totalProducts: 0
   });
   const [chartData, setChartData] = useState<Array<{
     cliente: string;
@@ -228,11 +229,12 @@ const Index = () => {
             {!isAnalyzing && paretoClients.length > 0 && (
               <>
                 {/* Metrics Dashboard */}
-                <ParetoMetrics
+                <ParetoMetrics 
                   totalSales={metrics.totalSales}
                   topClientsCount={metrics.topClientsCount}
                   topClientsPercentage={metrics.topClientsPercentage}
                   totalClients={metrics.totalClients}
+                  totalProducts={metrics.totalProducts}
                 />
 
                 {/* Chart */}

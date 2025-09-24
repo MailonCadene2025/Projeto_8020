@@ -1,86 +1,81 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Users, Percent, Target } from 'lucide-react';
+import { TrendingUp, Users, Percent, Package } from 'lucide-react';
 
 interface ParetoMetricsProps {
   totalSales: number;
   topClientsCount: number;
   topClientsPercentage: number;
   totalClients: number;
+  totalProducts: number;
 }
 
-export const ParetoMetrics: React.FC<ParetoMetricsProps> = ({
-  totalSales,
-  topClientsCount,
-  topClientsPercentage,
-  totalClients
-}) => {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
-  };
-
+export function ParetoMetrics({ 
+  totalSales, 
+  topClientsCount, 
+  topClientsPercentage, 
+  totalClients,
+  totalProducts 
+}: ParetoMetricsProps) {
   const metrics = [
     {
-      title: 'Vendas Totais',
-      value: formatCurrency(totalSales),
-      icon: TrendingUp,
-      color: 'text-success',
-      bgColor: 'bg-success-muted',
-      description: 'Total do período filtrado'
+      title: "Vendas Totais",
+      value: totalSales,
+      format: (value: number) => new Intl.NumberFormat('pt-BR').format(value),
+      currency: true
     },
     {
-      title: 'Clientes TOP 20%',
-      value: topClientsCount.toString(),
-      icon: Users,
-      color: 'text-primary',
-      bgColor: 'bg-primary-muted',
-      description: 'Clientes que geram 80% da receita'
+      title: "Total de Produtos Vendidos",
+      value: totalProducts,
+      format: (value: number) => new Intl.NumberFormat('pt-BR').format(value),
+      currency: false
     },
     {
-      title: '% Receita TOP 20%',
-      value: formatPercentage(topClientsPercentage),
-      icon: Percent,
-      color: 'text-warning',
-      bgColor: 'bg-warning-muted',
-      description: 'Concentração da receita'
+      title: "Clientes TOP 20%",
+      value: topClientsCount,
+      format: (value: number) => value.toString(),
+      currency: false
     },
     {
-      title: 'Total de Clientes',
-      value: totalClients.toString(),
-      icon: Target,
-      color: 'text-muted-foreground',
-      bgColor: 'bg-muted',
-      description: 'Clientes únicos no período'
+      title: "% Vendas TOP 20%",
+      value: topClientsPercentage,
+      format: (value: number) => `${value.toFixed(1)}%`,
+      currency: false
+    },
+    {
+      title: "Total de Clientes",
+      value: totalClients,
+      format: (value: number) => value.toString(),
+      currency: false
     }
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 grid-cols-5">
       {metrics.map((metric, index) => (
         <Card key={index} className="shadow-card hover:shadow-elevation transition-all duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+            <CardTitle className="text-xs font-medium text-muted-foreground">
               {metric.title}
             </CardTitle>
-            <div className={`p-2 rounded-lg ${metric.bgColor}`}>
-              <metric.icon className={`h-4 w-4 ${metric.color}`} />
+            <div className="p-1 rounded-lg bg-muted">
+              {index === 0 ? <TrendingUp className="h-3 w-3 text-primary" /> :
+               index === 1 ? <Package className="h-3 w-3 text-primary" /> :
+               index === 2 ? <Users className="h-3 w-3 text-primary" /> :
+               index === 3 ? <Percent className="h-3 w-3 text-primary" /> :
+               <Users className="h-3 w-3 text-primary" />}
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-3">
             <div className="space-y-1">
-              <div className="text-2xl font-bold">
-                {metric.value}
+              <div className="text-xl font-bold">
+                {metric.format(metric.value)}
               </div>
-              <p className="text-xs text-muted-foreground">
-                {metric.description}
-              </p>
+              {metric.currency && (
+                <p className="text-xs text-muted-foreground">
+                  R$
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

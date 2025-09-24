@@ -18,6 +18,7 @@ interface ParetoMetrics {
   topClientsCount: number;
   topClientsPercentage: number;
   totalClients: number;
+  totalProducts: number;
 }
 
 interface ActiveFilters {
@@ -38,7 +39,7 @@ export class ParetoAnalysisService {
     if (salesData.length === 0) {
       return {
         clients: [],
-        metrics: { totalSales: 0, topClientsCount: 0, topClientsPercentage: 0, totalClients: 0 },
+        metrics: { totalSales: 0, topClientsCount: 0, topClientsPercentage: 0, totalClients: 0, totalProducts: 0 },
         chartData: []
       };
     }
@@ -53,6 +54,7 @@ export class ParetoAnalysisService {
     // Calculate totals
     const totalSales = sortedClients.reduce((sum, client) => sum + client.vendasTotais, 0);
     const totalClients = sortedClients.length;
+    const totalProducts = salesData.reduce((sum, sale) => sum + sale.quantidade, 0);
 
     // Calculate Pareto classification
     let cumulativeSum = 0;
@@ -106,7 +108,8 @@ export class ParetoAnalysisService {
         totalSales,
         topClientsCount,
         topClientsPercentage,
-        totalClients
+        totalClients,
+        totalProducts
       },
       chartData
     };
