@@ -150,15 +150,7 @@ const History = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="outline"
-            onClick={handleBackToPareto}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para 80/20
-          </Button>
+        <div className="mb-6">
           <h1 className="text-2xl font-bold">Histórico de Compras 2024/2025</h1>
         </div>
         

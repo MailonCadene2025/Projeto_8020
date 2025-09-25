@@ -9,6 +9,7 @@ import { Login } from "@/components/Login";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import History from "./pages/History";
+import YearOverYear from "./pages/YearOverYear";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <History />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/year-over-year" 
+              element={
+                <ProtectedRoute>
+                  <YearOverYear />
                 </ProtectedRoute>
               } 
             />

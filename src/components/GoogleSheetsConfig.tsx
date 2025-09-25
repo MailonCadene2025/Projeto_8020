@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -54,9 +53,6 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
               Configure seus filtros na tela seguinte e obtenha sua analise 80/20
             </CardDescription>
           </div>
-          <Link to="/history">
-            <Button variant="outline">Ver Histórico De Compras</Button>
-          </Link>
           {isConnected && (
             <div className="px-3 py-1 bg-success-muted text-success text-sm rounded-full font-medium">
               Conectado
