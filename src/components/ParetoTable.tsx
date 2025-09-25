@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ interface ParetoTableProps {
 }
 
 export const ParetoTable: React.FC<ParetoTableProps> = ({ data, onExport }) => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const itemsPerPage = 20;
@@ -67,6 +69,15 @@ export const ParetoTable: React.FC<ParetoTableProps> = ({ data, onExport }) => {
         Demais 80%
       </Badge>
     );
+  };
+
+  const handleClientClick = (clientName: string) => {
+    // Navegar para a página de histórico com o filtro do cliente aplicado
+    navigate('/history', { 
+      state: { 
+        prefilledClient: clientName 
+      } 
+    });
   };
 
   return (
@@ -126,7 +137,12 @@ export const ParetoTable: React.FC<ParetoTableProps> = ({ data, onExport }) => {
               {paginatedData.map((client, index) => (
                 <TableRow key={index} className="hover:bg-muted/50">
                   <TableCell className="font-medium">
-                    {client.nomeFantasia}
+                    <button
+                      onClick={() => handleClientClick(client.nomeFantasia)}
+                      className="text-left hover:underline cursor-pointer font-medium transition-colors w-full"
+                    >
+                      {client.nomeFantasia}
+                    </button>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">

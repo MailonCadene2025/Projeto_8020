@@ -1,22 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Header } from '@/components/Header';
 import { HistoryFilters, HistoryFilterOptions, ActiveHistoryFilters } from '@/components/HistoryFilters';
 import { GoogleSheetsService, HistoryData } from '@/services/googleSheetsService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const API_KEY = 'AIzaSyCd7d1FcI_61TgM_WB6G4T9ao7BkHT45J8';
 const SHEET_ID = '1p7cRvyWsNQmZRrvWPKU2Wxx380jzqxMKhmgmsvTZ0u8';
 
 const History = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [data, setData] = useState<HistoryData[]>([]);
   const [filteredData, setFilteredData] = useState<HistoryData[]>([]);
   const [filterOptions, setFilterOptions] = useState<HistoryFilterOptions>({ clientes: [], categorias: [], regionais: [], estados: [], cidades: [], vendedores: [] });
   const [activeFilters, setActiveFilters] = useState<ActiveHistoryFilters>({});
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Obter cliente pré-selecionado do state da navegação
+  const prefilledClient = location.state?.prefilledClient;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,26 +51,38 @@ const History = () => {
           vendedores: vendedoresOptions,
         });
 
-        // Aplicar filtro automático se for vendedor
+        // Aplicar filtros automáticos
         let initialFilteredData = historyData;
-        let initialFilters = {};
+        let initialFilters: ActiveHistoryFilters = {};
         
+        // Filtro automático para vendedor
         if (user && user.role === 'vendedor' && user.vendedor) {
-          initialFilters = { vendedor: user.vendedor };
-          initialFilteredData = historyData.filter(item => item.vendedor === user.vendedor);
-          setActiveFilters(initialFilters);
+          initialFilters.vendedor = user.vendedor;
+          initialFilteredData = initialFilteredData.filter(item => item.vendedor === user.vendedor);
         }
-        
-        setFilteredData(initialFilteredData);
 
+        // Filtro automático para cliente pré-selecionado
+        if (prefilledClient) {
+          initialFilters.cliente = prefilledClient;
+          initialFilteredData = initialFilteredData.filter(item => item.nomeFantasia === prefilledClient);
+        }
+
+        setActiveFilters(initialFilters);
+        setFilteredData(initialFilteredData);
+        setIsLoading(false);
       } catch (error) {
-        toast({ title: 'Erro ao buscar dados', description: (error as Error).message, variant: 'destructive' });
-      } finally {
+        console.error('Erro ao buscar dados:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados do histórico.",
+          variant: "destructive",
+        });
         setIsLoading(false);
       }
     };
+
     fetchData();
-  }, [toast, user]);
+  }, [user, prefilledClient, toast]);
 
   const handleApplyFilters = () => {
     let filtered = data.filter(item => {
@@ -122,46 +142,73 @@ const History = () => {
     });
   };
 
+  const handleBackToPareto = () => {
+    navigate('/');
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Histórico de Compras 2024/2025</h1>
-      <HistoryFilters options={filterOptions} activeFilters={activeFilters} onFilterChange={setActiveFilters} onApply={handleApplyFilters} onClear={handleClearFilters} />
-      {isLoading ? <p>Carregando...</p> : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Data Pedido</TableHead>
-              <TableHead>Nome Fantasia</TableHead>
-              <TableHead>Cidade</TableHead>
-              <TableHead>UF</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Forma de Pagamento</TableHead>
-              <TableHead>NF-</TableHead>
-              <TableHead>Vendedor</TableHead>
-              <TableHead>REGIONAL</TableHead>
-              <TableHead>Qtdde</TableHead>
-              <TableHead>VALOR</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredData.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>{item.dataPedido}</TableCell>
-                <TableCell>{item.nomeFantasia}</TableCell>
-                <TableCell>{item.cidade}</TableCell>
-                <TableCell>{item.uf}</TableCell>
-                <TableCell>{item.categoria}</TableCell>
-                <TableCell>{item.formaPagamento}</TableCell>
-                <TableCell>{item.nf}</TableCell>
-                <TableCell>{item.vendedor}</TableCell>
-                <TableCell>{item.regional}</TableCell>
-                <TableCell>{item.quantidade}</TableCell>
-                <TableCell>{item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="outline"
+            onClick={handleBackToPareto}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para 80/20
+          </Button>
+          <h1 className="text-2xl font-bold">Histórico de Compras 2024/2025</h1>
+        </div>
+        
+        <HistoryFilters 
+          options={filterOptions} 
+          activeFilters={activeFilters} 
+          onFilterChange={setActiveFilters} 
+          onApply={handleApplyFilters} 
+          onClear={handleClearFilters} 
+        />
+        
+        {isLoading ? (
+          <p>Carregando...</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data Pedido</TableHead>
+                <TableHead>Nome Fantasia</TableHead>
+                <TableHead>Cidade</TableHead>
+                <TableHead>UF</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Forma de Pagamento</TableHead>
+                <TableHead>NF-</TableHead>
+                <TableHead>Vendedor</TableHead>
+                <TableHead>REGIONAL</TableHead>
+                <TableHead>Qtdde</TableHead>
+                <TableHead>VALOR</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            </TableHeader>
+            <TableBody>
+              {filteredData.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>{item.dataPedido}</TableCell>
+                  <TableCell>{item.nomeFantasia}</TableCell>
+                  <TableCell>{item.cidade}</TableCell>
+                  <TableCell>{item.uf}</TableCell>
+                  <TableCell>{item.categoria}</TableCell>
+                  <TableCell>{item.formaPagamento}</TableCell>
+                  <TableCell>{item.nf}</TableCell>
+                  <TableCell>{item.vendedor}</TableCell>
+                  <TableCell>{item.regional}</TableCell>
+                  <TableCell>{item.quantidade}</TableCell>
+                  <TableCell>{item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
     </div>
   );
 };
