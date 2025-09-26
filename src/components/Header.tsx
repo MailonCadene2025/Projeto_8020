@@ -24,7 +24,8 @@ export const Header: React.FC = () => {
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-primary">Sistema Pareto 80/20</h1>
+          <img src="https://i.ibb.co/BpTtpvT/logo3.png" alt="logo3" className="h-8 w-auto" />
+          <h1 className="text-2xl font-bold" style={{color: '#085c2b'}}>Central De Inteligencia Comercial - Terris</h1>
         </div>
         
         <div className="flex items-center space-x-4">

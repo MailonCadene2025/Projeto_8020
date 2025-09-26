@@ -23,7 +23,9 @@ const users = [
   { username: 'Sara', password: 'sara@753', role: 'vendedor' as const, vendedor: 'SARA' },
   { username: 'Itacir', password: 'itacir@753', role: 'vendedor' as const, vendedor: 'ITACIR' },
   { username: 'Daniel', password: 'daniel@753', role: 'vendedor' as const, vendedor: 'DANIEL' },
-  { username: 'Pedro', password: 'pedro@753', role: 'vendedor' as const, vendedor: 'PEDRO' }
+  { username: 'Pedro', password: 'pedro@753', role: 'vendedor' as const, vendedor: 'PEDRO' },
+  { username: 'Rocha', password: 'rocha@753', role: 'vendedor' as const, vendedor: 'ROCHA' },
+  { username: 'Pieri', password: 'pieri@753', role: 'vendedor' as const, vendedor: 'PIERI' }
 ];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

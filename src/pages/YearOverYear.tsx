@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const API_KEY = 'AIzaSyCd7d1FcI_61TgM_WB6G4T9ao7BkHT45J8';
 const SHEET_ID = '1p7cRvyWsNQmZRrvWPKU2Wxx380jzqxMKhmgmsvTZ0u8';
@@ -242,8 +242,34 @@ const YearOverYear = () => {
                 <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                 <YAxis tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`} />
                 <Tooltip formatter={(value) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, '']} />
-                <Line type="monotone" dataKey="2024" stroke="#8884d8" strokeWidth={2} name="2024" />
-                <Line type="monotone" dataKey="2025" stroke="#82ca9d" strokeWidth={2} name="2025" />
+                <Legend 
+                  verticalAlign="top" 
+                  height={36}
+                  iconType="line"
+                  wrapperStyle={{
+                    paddingBottom: '20px',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="2024" 
+                  stroke="#f97316" 
+                  strokeWidth={3} 
+                  name="2024 (Ano Anterior)" 
+                  dot={{ fill: '#f97316', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#f97316', strokeWidth: 2 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="2025" 
+                  stroke="#22c55e" 
+                  strokeWidth={3} 
+                  name="2025 (Ano Atual)" 
+                  dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#22c55e', strokeWidth: 2 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

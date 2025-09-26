@@ -46,11 +46,11 @@ export const GoogleSheetsConfig: React.FC<GoogleSheetsConfigProps> = ({
             <CardTitle className="flex items-center gap-2">
               {getStatusIcon()}
               <span className={getStatusColor()}>
-                Bem vindo(a), ao painel 80/20
+              <h1 className="text-2xl font-bold" style={{color: '#085c2b'}}>Bem vindo(a), central de inteligência comercial da Terris</h1>
               </span>
             </CardTitle>
             <CardDescription>
-              Configure seus filtros na tela seguinte e obtenha sua analise 80/20
+                   Acompanhe o 80/20 da sua região, histórico de compras e Comparativo anual
             </CardDescription>
           </div>
           {isConnected && (

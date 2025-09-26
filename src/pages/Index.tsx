@@ -299,7 +299,7 @@ const Index = () => {
                 <p>1. Clique em conectar e Carregar</p>
                 <p>2. Defina os filtros desejados</p>
                 <p>3. Clique em Aplicar Análise</p>
-                <p>4. Se desejar, exporte para CSV clicando acima da tabela no botão de export</p>
+  
               </div>
             </div>
           </div>
