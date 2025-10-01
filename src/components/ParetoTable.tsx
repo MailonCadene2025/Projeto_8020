@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, Search, Trophy, AlertTriangle, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Trophy, AlertTriangle } from 'lucide-react';
 
 export interface ParetoClient {
   nomeFantasia: string;
@@ -24,10 +24,9 @@ export interface ParetoClient {
 
 interface ParetoTableProps {
   data: ParetoClient[];
-  onExport: () => void;
 }
 
-export const ParetoTable: React.FC<ParetoTableProps> = ({ data, onExport }) => {
+export const ParetoTable: React.FC<ParetoTableProps> = ({ data }) => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,14 +102,6 @@ export const ParetoTable: React.FC<ParetoTableProps> = ({ data, onExport }) => {
                 className="pl-10"
               />
             </div>
-            <Button
-              variant="outline"
-              onClick={onExport}
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Exportar CSV
-            </Button>
           </div>
         </div>
       </CardHeader>

@@ -184,6 +184,7 @@ const Index = () => {
   };
 
   // Export data
+  // Remover a função handleExport
   const handleExport = () => {
     ParetoAnalysisService.downloadCSV(paretoClients, 'analise-pareto.csv');
     toast({
@@ -272,7 +273,6 @@ const Index = () => {
                 {/* Table */}
                 <ParetoTable
                   data={paretoClients}
-                  onExport={handleExport}
                 />
               </>
             )}
