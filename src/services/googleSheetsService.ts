@@ -25,6 +25,18 @@ export interface HistoryData {
   valor: number;
 }
 
+export interface DemoComodatosData {
+  dataPedido: string;
+  nomeFantasia: string;
+  categoria: string;
+  vendedor: string;
+  cidade: string;
+  uf: string;
+  regional: string;
+  quantidade: number;
+  valor: number;
+}
+
 interface ApiResponse {
   values?: string[][];
   error?: {
@@ -137,6 +149,39 @@ export class GoogleSheetsService {
     } catch (error) {
       console.error('Erro ao buscar dados de histórico:', error);
       throw error instanceof Error ? error : new Error('Erro desconhecido ao buscar dados de histórico');
+    }
+  }
+
+  async fetchDemoComodatosData(range: string = 'DEMONS_COMODATOS!A:I'): Promise<DemoComodatosData[]> {
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${range}?key=${this.apiKey}`;
+      const response = await fetch(url);
+      const data: ApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Erro ao conectar com Google Sheets');
+      }
+
+      if (!data.values || data.values.length === 0) {
+        throw new Error('Nenhum dado encontrado na planilha');
+      }
+
+      const rows = data.values.slice(1);
+
+      return rows.map((row): DemoComodatosData => ({
+        dataPedido: row[0] || '',
+        nomeFantasia: row[1] || '',
+        categoria: row[2] || '',
+        vendedor: row[3] || '',
+        cidade: row[4] || '',
+        uf: row[5] || '',
+        regional: row[6] || '',
+        quantidade: parseInt(row[7]) || 0,
+        valor: this.parseValue(row[8] || '0')
+      }));
+    } catch (error) {
+      console.error('Erro ao buscar dados de demonstrações/comodatos:', error);
+      throw error instanceof Error ? error : new Error('Erro desconhecido ao buscar dados de demonstrações/comodatos');
     }
   }
 

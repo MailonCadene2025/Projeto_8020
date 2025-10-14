@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { YearOverYearFilters, YearOverYearFilterOptions, ActiveYearOverYearFilters } from '@/components/YearOverYearFilters';
@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowUpDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -36,6 +36,8 @@ const YearOverYear = () => {
   const [rawData, setRawData] = useState<HistoryData[]>([]);
   const [data, setData] = useState<YearOverYearData[]>([]);
   const [filteredData, setFilteredData] = useState<YearOverYearData[]>([]);
+  const [sortKey, setSortKey] = useState<keyof YearOverYearData | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filterOptions, setFilterOptions] = useState<YearOverYearFilterOptions>({ clientes: [], categorias: [], regionais: [], estados: [], cidades: [], vendedores: [] });
   const [activeFilters, setActiveFilters] = useState<ActiveYearOverYearFilters>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -199,6 +201,46 @@ const YearOverYear = () => {
     navigate('/');
   };
 
+  const getComparable = (item: YearOverYearData, key: keyof YearOverYearData) => {
+    if (
+      key === 'totalProdutos2024' ||
+      key === 'totalItens2024' ||
+      key === 'faturamento2024' ||
+      key === 'totalProdutos2025' ||
+      key === 'totalItens2025' ||
+      key === 'faturamento2025' ||
+      key === 'crescimentoPercentual'
+    ) {
+      return item[key] as number;
+    }
+    return String(item[key] || '').toLowerCase();
+  };
+
+  const handleSort = (key: keyof YearOverYearData) => {
+    if (sortKey === key) {
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedData = useMemo(() => {
+    const arr = [...filteredData];
+    if (!sortKey) return arr;
+    return arr.sort((a, b) => {
+      const va = getComparable(a, sortKey);
+      const vb = getComparable(b, sortKey);
+      let cmp = 0;
+      if (typeof va === 'number' && typeof vb === 'number') {
+        cmp = va - vb;
+      } else {
+        cmp = String(va).localeCompare(String(vb), 'pt-BR');
+      }
+      return sortOrder === 'asc' ? cmp : -cmp;
+    });
+  }, [filteredData, sortKey, sortOrder]);
+
   // Dados para o gráfico
   const chartData = filteredData.slice(0, 10).map(item => ({
     name: item.nomeFantasia.substring(0, 15) + (item.nomeFantasia.length > 15 ? '...' : ''),
@@ -281,18 +323,82 @@ const YearOverYear = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome da Revenda</TableHead>
-                <TableHead className="text-right">Total Produtos 2024</TableHead>
-                <TableHead className="text-right">Total Itens 2024</TableHead>
-                <TableHead className="text-right">Faturamento 2024</TableHead>
-                <TableHead className="text-right">Total Produtos 2025</TableHead>
-                <TableHead className="text-right">Total Itens 2025</TableHead>
-                <TableHead className="text-right">Faturamento 2025</TableHead>
-                <TableHead className="text-right">% Crescimento</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('nomeFantasia')}>
+                  <div className="flex items-center gap-1">
+                    <span>Nome da Revenda</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'nomeFantasia' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort('totalProdutos2024')}>
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Total Produtos 2024</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'totalProdutos2024' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort('totalItens2024')}>
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Total Itens 2024</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'totalItens2024' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort('faturamento2024')}>
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Faturamento 2024</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'faturamento2024' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort('totalProdutos2025')}>
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Total Produtos 2025</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'totalProdutos2025' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort('totalItens2025')}>
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Total Itens 2025</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'totalItens2025' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort('faturamento2025')}>
+                  <div className="flex items-center justify-end gap-1">
+                    <span>Faturamento 2025</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'faturamento2025' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right cursor-pointer select-none" onClick={() => handleSort('crescimentoPercentual')}>
+                  <div className="flex items-center justify-end gap-1">
+                    <span>% Crescimento</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'crescimentoPercentual' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map((item, index) => (
+              {sortedData.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">{item.nomeFantasia}</TableCell>
                   <TableCell className="text-right">{item.totalProdutos2024}</TableCell>

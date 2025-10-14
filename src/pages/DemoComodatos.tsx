@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { HistoryFilters, HistoryFilterOptions, ActiveHistoryFilters } from '@/components/HistoryFilters';
-import { GoogleSheetsService, HistoryData } from '@/services/googleSheetsService';
+import { GoogleSheetsService, DemoComodatosData } from '@/services/googleSheetsService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,83 +12,69 @@ import { ArrowLeft, ArrowUpDown } from 'lucide-react';
 const API_KEY = 'AIzaSyCd7d1FcI_61TgM_WB6G4T9ao7BkHT45J8';
 const SHEET_ID = '1p7cRvyWsNQmZRrvWPKU2Wxx380jzqxMKhmgmsvTZ0u8';
 
-const History = () => {
+const DemoComodatos = () => {
   const { user } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
-  const [data, setData] = useState<HistoryData[]>([]);
-  const [filteredData, setFilteredData] = useState<HistoryData[]>([]);
-  const [sortKey, setSortKey] = useState<keyof HistoryData | null>(null);
+  const [data, setData] = useState<DemoComodatosData[]>([]);
+  const [filteredData, setFilteredData] = useState<DemoComodatosData[]>([]);
+  const [sortKey, setSortKey] = useState<keyof DemoComodatosData | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filterOptions, setFilterOptions] = useState<HistoryFilterOptions>({ clientes: [], categorias: [], regionais: [], estados: [], cidades: [], vendedores: [] });
   const [activeFilters, setActiveFilters] = useState<ActiveHistoryFilters>({});
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Obter cliente pré-selecionado do state da navegação
-  const prefilledClient = location.state?.prefilledClient;
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const service = new GoogleSheetsService(API_KEY, SHEET_ID);
-        const historyData = await service.fetchHistoryData();
-        setData(historyData);
-        
-        // Extract filter options, filtering out empty values
-        const extractUnique = (data: HistoryData[], key: keyof HistoryData) => [...new Set(data.map(item => item[key]).filter(Boolean))] as string[];
+        const demoData = await service.fetchDemoComodatosData();
+        setData(demoData);
 
-        // Filtrar opções de vendedores baseado no papel do usuário
-        const allVendedores = extractUnique(historyData, 'vendedor').sort();
+        const extractUnique = (data: DemoComodatosData[], key: keyof DemoComodatosData) => [...new Set(data.map(item => item[key]).filter(Boolean))] as string[];
+
+        const allVendedores = extractUnique(demoData, 'vendedor').sort();
         const vendedoresOptions = user && user.role === 'vendedor' && user.vendedor 
-          ? [user.vendedor] // Se for vendedor, mostrar apenas seu próprio nome
-          : allVendedores;   // Se for admin, mostrar todos
+          ? [user.vendedor]
+          : allVendedores;
 
         setFilterOptions({
-          clientes: extractUnique(historyData, 'nomeFantasia').sort(),
-          categorias: extractUnique(historyData, 'categoria').sort(),
-          regionais: extractUnique(historyData, 'regional').sort(),
-          estados: extractUnique(historyData, 'uf').sort(),
-          cidades: extractUnique(historyData, 'cidade').sort(),
+          clientes: extractUnique(demoData, 'nomeFantasia').sort(),
+          categorias: extractUnique(demoData, 'categoria').sort(),
+          regionais: extractUnique(demoData, 'regional').sort(),
+          estados: extractUnique(demoData, 'uf').sort(),
+          cidades: extractUnique(demoData, 'cidade').sort(),
           vendedores: vendedoresOptions,
         });
 
-        // Aplicar filtros automáticos
-        let initialFilteredData = historyData;
+        let initialFilteredData = demoData;
         let initialFilters: ActiveHistoryFilters = {};
-        
-        // Filtro automático para vendedor
+
         if (user && user.role === 'vendedor' && user.vendedor) {
           initialFilters.vendedor = user.vendedor;
           initialFilteredData = initialFilteredData.filter(item => item.vendedor === user.vendedor);
-        }
-
-        // Filtro automático para cliente pré-selecionado
-        if (prefilledClient) {
-          initialFilters.cliente = prefilledClient;
-          initialFilteredData = initialFilteredData.filter(item => item.nomeFantasia === prefilledClient);
         }
 
         setActiveFilters(initialFilters);
         setFilteredData(initialFilteredData);
         setIsLoading(false);
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de demonstrações/comodatos:', error);
         toast({
-          title: "Erro",
-          description: "Não foi possível carregar os dados do histórico.",
-          variant: "destructive",
+          title: 'Erro',
+          description: 'Não foi possível carregar os dados de Demonstrações e Comodatos.',
+          variant: 'destructive',
         });
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [user, prefilledClient, toast]);
+  }, [user, toast]);
 
   const handleApplyFilters = () => {
     let filtered = data.filter(item => {
-      if (!item.dataPedido) return false; // Ignore entries with no date
+      if (!item.dataPedido) return false;
       const itemDate = new Date(item.dataPedido.split('/').reverse().join('-'));
       itemDate.setHours(0, 0, 0, 0);
 
@@ -116,31 +102,27 @@ const History = () => {
   };
 
   const handleClearFilters = () => {
-    let clearedFilters = {};
-    
-    // Se o usuário for vendedor, manter o filtro de vendedor
+    let clearedFilters: ActiveHistoryFilters | {} = {};
+
     if (user && user.role === 'vendedor' && user.vendedor) {
       clearedFilters = { vendedor: user.vendedor };
     }
-    
-    setActiveFilters(clearedFilters);
-    
-    // Aplicar os filtros (se houver) aos dados
+
+    setActiveFilters(clearedFilters as ActiveHistoryFilters);
+
     let dataToShow = data;
     if (Object.keys(clearedFilters).length > 0) {
       dataToShow = data.filter(item => {
-        if ('vendedor' in clearedFilters && item.vendedor !== (clearedFilters as { vendedor: string }).vendedor) return false;
+        if ('vendedor' in (clearedFilters as { vendedor: string }) && item.vendedor !== (clearedFilters as { vendedor: string }).vendedor) return false;
         return true;
       });
     }
-    
+
     setFilteredData(dataToShow);
-    
+
     toast({
-      title: "Filtros limpos",
-      description: user?.role === 'vendedor' 
-        ? "Filtros limpos. Filtro de vendedor mantido."
-        : "Mostrando todos os dados disponíveis.",
+      title: 'Filtros limpos',
+      description: user?.role === 'vendedor' ? 'Filtros limpos. Filtro de vendedor mantido.' : 'Mostrando todos os dados disponíveis.',
     });
   };
 
@@ -148,7 +130,7 @@ const History = () => {
     navigate('/');
   };
 
-  const getComparable = (item: HistoryData, key: keyof HistoryData) => {
+  const getComparable = (item: DemoComodatosData, key: keyof DemoComodatosData) => {
     if (key === 'dataPedido') {
       const [d, m, y] = (item.dataPedido || '').split('/');
       return new Date(parseInt(y || '0'), parseInt(m || '1') - 1, parseInt(d || '1')).getTime();
@@ -159,7 +141,7 @@ const History = () => {
     return String(item[key] || '').toLowerCase();
   };
 
-  const handleSort = (key: keyof HistoryData) => {
+  const handleSort = (key: keyof DemoComodatosData) => {
     if (sortKey === key) {
       setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -188,10 +170,14 @@ const History = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Histórico de Compras 2024/2025</h1>
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="outline" onClick={handleBackToPareto} className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para 80/20
+          </Button>
+          <h1 className="text-2xl font-bold">Demonstrações e Comodatos</h1>
         </div>
-        
+
         <HistoryFilters 
           options={filterOptions} 
           activeFilters={activeFilters} 
@@ -199,7 +185,7 @@ const History = () => {
           onApply={handleApplyFilters} 
           onClear={handleClearFilters} 
         />
-        
+
         {isLoading ? (
           <p>Carregando...</p>
         ) : (
@@ -224,6 +210,24 @@ const History = () => {
                     )}
                   </div>
                 </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('categoria')}>
+                  <div className="flex items-center gap-1">
+                    <span>Categoria</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'categoria' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('vendedor')}>
+                  <div className="flex items-center gap-1">
+                    <span>Vendedor</span>
+                    <ArrowUpDown className="h-3 w-3 opacity-60" />
+                    {sortKey === 'vendedor' && (
+                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
+                    )}
+                  </div>
+                </TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => handleSort('cidade')}>
                   <div className="flex items-center gap-1">
                     <span>Cidade</span>
@@ -238,42 +242,6 @@ const History = () => {
                     <span>UF</span>
                     <ArrowUpDown className="h-3 w-3 opacity-60" />
                     {sortKey === 'uf' && (
-                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
-                    )}
-                  </div>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('categoria')}>
-                  <div className="flex items-center gap-1">
-                    <span>Categoria</span>
-                    <ArrowUpDown className="h-3 w-3 opacity-60" />
-                    {sortKey === 'categoria' && (
-                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
-                    )}
-                  </div>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('formaPagamento')}>
-                  <div className="flex items-center gap-1">
-                    <span>Forma de Pagamento</span>
-                    <ArrowUpDown className="h-3 w-3 opacity-60" />
-                    {sortKey === 'formaPagamento' && (
-                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
-                    )}
-                  </div>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('nf')}>
-                  <div className="flex items-center gap-1">
-                    <span>NF-</span>
-                    <ArrowUpDown className="h-3 w-3 opacity-60" />
-                    {sortKey === 'nf' && (
-                      <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
-                    )}
-                  </div>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('vendedor')}>
-                  <div className="flex items-center gap-1">
-                    <span>Vendedor</span>
-                    <ArrowUpDown className="h-3 w-3 opacity-60" />
-                    {sortKey === 'vendedor' && (
                       <span className="text-xs text-muted-foreground">{sortOrder === 'asc' ? 'A→Z' : 'Z→A'}</span>
                     )}
                   </div>
@@ -317,12 +285,10 @@ const History = () => {
                 <TableRow key={index}>
                   <TableCell>{item.dataPedido}</TableCell>
                   <TableCell>{item.nomeFantasia}</TableCell>
+                  <TableCell>{item.categoria}</TableCell>
+                  <TableCell>{item.vendedor}</TableCell>
                   <TableCell>{item.cidade}</TableCell>
                   <TableCell>{item.uf}</TableCell>
-                  <TableCell>{item.categoria}</TableCell>
-                  <TableCell>{item.formaPagamento}</TableCell>
-                  <TableCell>{item.nf}</TableCell>
-                  <TableCell>{item.vendedor}</TableCell>
                   <TableCell>{item.regional}</TableCell>
                   <TableCell>{item.quantidade}</TableCell>
                   <TableCell>{item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
@@ -336,4 +302,4 @@ const History = () => {
   );
 };
 
-export default History;
+export default DemoComodatos;

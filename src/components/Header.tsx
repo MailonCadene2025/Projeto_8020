@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User, Shield, TrendingUp, Clock, BarChart3 } from 'lucide-react';
+import { LogOut, User, Shield, TrendingUp, Clock, BarChart3, Box } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
@@ -18,6 +18,10 @@ export const Header: React.FC = () => {
 
   const handleParetoClick = () => {
     navigate('/');
+  };
+
+  const handleDemoComodatosClick = () => {
+    navigate('/demo-comodatos');
   };
 
   return (
@@ -60,6 +64,17 @@ export const Header: React.FC = () => {
           >
             <TrendingUp className="h-4 w-4" />
             <span>Comparação Anual</span>
+          </Button>
+
+          {/* Botão Demonstrações e Comodatos */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleDemoComodatosClick}
+            className="flex items-center space-x-2"
+          >
+            <Box className="h-4 w-4" />
+            <span>Demonstrações e Comodatos</span>
           </Button>
           
           <div className="flex items-center space-x-2 text-sm">

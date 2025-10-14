@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import History from "./pages/History";
 import YearOverYear from "./pages/YearOverYear";
+import DemoComodatos from "./pages/DemoComodatos";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <YearOverYear />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/demo-comodatos" 
+              element={
+                <ProtectedRoute>
+                  <DemoComodatos />
                 </ProtectedRoute>
               } 
             />
