@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstrações e Comodatos - Terris</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+        }
+
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            background: #16a34a;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            color: #4a5568;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-item {
+            color: #64748b;
+            text-decoration: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: #f1f5f9;
+            color: #16a34a;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .breadcrumb a {
+            color: #16a34a;
+            text-decoration: none;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border-left: 4px solid #16a34a;
+        }
+
+        .summary-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #16a34a;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            padding: 0.65rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            min-width: 300px;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        }
+
+        .filter-button {
+            padding: 0.65rem 1.25rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-button:hover {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+        .export-button {
+            padding: 0.65rem 1.5rem;
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .export-button:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.95rem;
+        }
+
+        tr:hover {
+            background: #fafafa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-piloto {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-sb300 {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .value-highlight {
+            font-weight: 600;
+            color: #16a34a;
+        }
+
+        .regional-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            background: #f1f5f9;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #64748b;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: #f1f5f9;
+            color: #16a34a;
+        }
+
+        .pagination {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .pagination-info {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .pagination-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: #16a34a;
+            color: white;
+            border-color: #16a34a;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .search-filter {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">TS</div>
+            <span class="header-title">Central de Inteligência Comercial - Terris</span>
+        </div>
+        <nav class="header-nav">
+            <a href="#" class="nav-item">📊 80/20 - Clientes</a>
+            <a href="#" class="nav-item">📦 80/20 - Produtos</a>
+            <a href="#" class="nav-item">📈 Histórico de Compras</a>
+            <a href="#" class="nav-item">📉 Comparação Anual</a>
+            <a href="#" class="nav-item" style="background: #f1f5f9; color: #16a34a;">🎁 Demonstrações</a>
+            <a href="#" class="nav-item">👤 admin</a>
+            <a href="#" class="nav-item">🚪 Sair</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="#">← Voltar para 80/20</a>
+            </div>
+            <h1 class="page-title">Demonstrações e Comodatos</h1>
+        </div>
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">Total de Pedidos</div>
+                <div class="summary-value">12</div>
+            </div>
+            <div class="summary-card" style="border-left-color: #2563eb;">
+                <div class="summary-label">Valor Total</div>
+                <div class="summary-value" style="color: #2563eb;">R$ 488.699</div>
+            </div>
+            <div class="summary-card" style="border-left-color: #f59e0b;">
+                <div class="summary-label">Ticket Médio</div>
+                <div class="summary-value" style="color: #f59e0b;">R$ 40.725</div>
+            </div>
+            <div class="summary-card" style="border-left-color: #8b5cf6;">
+                <div class="summary-label">Regiões Ativas</div>
+                <div class="summary-value" style="color: #8b5cf6;">7</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="search-filter">
+                    <input type="text" class="search-input" placeholder="🔍 Buscar por cliente, vendedor ou cidade...">
+                    <button class="filter-button">
+                        🎯 Filtros
+                    </button>
+                    <button class="filter-button">
+                        📅 Período
+                    </button>
+                </div>
+                <button class="export-button">📥 Exportar</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Categoria</th>
+                            <th>Vendedor</th>
+                            <th>Localização</th>
+                            <th>Regional</th>
+                            <th>Qtde</th>
+                            <th>Valor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>13/12/2024</td>
+                            <td><strong>Rodrigo Perin</strong></td>
+                            <td><span class="status-badge status-piloto">PILOTO</span></td>
+                            <td>MATHEUS</td>
+                            <td>Cascavel - PR2</td>
+                            <td><span class="regional-badge">Regional 1</span></td>
+                            <td>1</td>
+                            <td><span class="value-highlight">R$ 0,00</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn" title="Ver detalhes">👁️</button>
+                                    <button class="action-btn" title="Editar">✏️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>24/04/2025</td>
+                            <td><strong>PLANTA MAQUINAS V. M</strong></td>
+                            <td><span class="status-badge status-sb300">SB-300</span></td>
+                            <td>MATHEUS</td>
+                            <td>São Miguel do Iguaçu - PR1</td>
+                            <td><span class="regional-badge">Regional 1</span></td>
+                            <td>1</td>
+                            <td><span class="value-highlight">R$ 12.900,00</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn" title="Ver detalhes">👁️</button>
+                                    <button class="action-btn" title="Editar">✏️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>21/07/2025</td>
+                            <td><strong>EDER BROETTO</strong></td>
+                            <td><span class="status-badge status-sb300">SB-300</span></td>
+                            <td>NARA</td>
+                            <td>Tenente Portela - RS</td>
+                            <td><span class="regional-badge">Regional 1</span></td>
+                            <td>1</td>
+                            <td><span class="value-highlight">R$ 18.000,00</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn" title="Ver detalhes">👁️</button>
+                                    <button class="action-btn" title="Editar">✏️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>01/08/2025</td>
+                            <td><strong>TERRA MAIS</strong></td>
+                            <td><span class="status-badge status-sb300">SB-300</span></td>
+                            <td>MATHEUS</td>
+                            <td>Toledo - PR2</td>
+                            <td><span class="regional-badge">Regional 1</span></td>
+                            <td>1</td>
+                            <td><span class="value-highlight">R$ 12.400,00</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn" title="Ver detalhes">👁️</button>
+                                    <button class="action-btn" title="Editar">✏️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>04/08/2025</td>
+                            <td><strong>Marcos Bortolini</strong></td>
+                            <td><span class="status-badge status-sb300">SB-300</span></td>
+                            <td>NARA</td>
+                            <td>Pranchita - PR</td>
+                            <td><span class="regional-badge">Regional 1</span></td>
+                            <td>1</td>
+                            <td><span class="value-highlight">R$ 15.500,00</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn" title="Ver detalhes">👁️</button>
+                                    <button class="action-btn" title="Editar">✏️</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>12/08/2025</td>
+                            <td><strong>COOPERCITRUS - MATRIZ - BEBEDOURO</strong></td>
+                            <td><span class="status-badge status-sb300">SB-300</span></td>
+                            <td>ITACIR</td>
+                            <td>Bebedouro - SP</td>
+                            <td><span class="regional-badge">Regional 2</span></td>
+                            <td>1</td>
+                            <td><span class="value-highlight">R$ 12.000,00</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn" title="Ver detalhes">👁️</button>
+                                    <button class="action-btn" title="Editar">✏️</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <div class="pagination-info">
+                    Mostrando 1-6 de 12 registros
+                </div>
+                <div class="pagination-buttons">
+                    <button class="pagination-btn" disabled>← Anterior</button>
+                    <button class="pagination-btn active">1</button>
+                    <button class="pagination-btn">2</button>
+                    <button class="pagination-btn">Próximo →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
