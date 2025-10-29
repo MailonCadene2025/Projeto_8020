@@ -1,96 +1,142 @@
-import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Filter, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronDown } from 'lucide-react';
 
-export interface HistoryFilterOptions {
-  clientes: string[];
-  categorias: string[];
-  regionais: string[];
-  estados: string[];
-  cidades: string[];
-  vendedores: string[];
+export interface FilterOptions {
+  cliente: string[];
+  cidade: string[];
+  estado: string[];
+  categoria: string[];
+  vendedor: string[];
+  regional: string[];
 }
 
-export interface ActiveHistoryFilters {
+export interface ActiveFilters {
   dataInicio?: string;
   dataFim?: string;
   cliente?: string;
-  categoria?: string;
-  regional?: string;
-  estado?: string;
   cidade?: string;
+  estado?: string;
+  categoria?: string;
   vendedor?: string;
+  regional?: string;
 }
 
 interface HistoryFiltersProps {
-  options: HistoryFilterOptions;
-  activeFilters: ActiveHistoryFilters;
-  onFilterChange: (filters: ActiveHistoryFilters) => void;
-  onApply: () => void;
-  onClear: () => void;
+  filterOptions: FilterOptions;
+  activeFilters: ActiveFilters;
+  onFilterChange: (filters: ActiveFilters) => void;
+  onApplyFilters: () => void;
+  onClearFilters: () => void;
+  isLoading?: boolean;
 }
 
-const keyMap: { [key: string]: keyof ActiveHistoryFilters } = {
-  clientes: 'cliente',
-  categorias: 'categoria',
-  regionais: 'regional',
-  estados: 'estado',
-  cidades: 'cidade',
-  vendedores: 'vendedor',
-};
-
-export const HistoryFilters: React.FC<HistoryFiltersProps> = ({ options, activeFilters, onFilterChange, onApply, onClear }) => {
+export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
+  filterOptions,
+  activeFilters,
+  onFilterChange,
+  onApplyFilters,
+  onClearFilters,
+  isLoading = false,
+}) => {
   const { user } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  
-  const handleInputChange = (field: keyof ActiveHistoryFilters, value: string) => {
-    onFilterChange({ ...activeFilters, [field]: value });
+
+  const updateFilter = (key: keyof ActiveFilters, value: string | undefined) => {
+    onFilterChange({ ...activeFilters, [key]: value });
+  };
+
+  const renderSelectField = (
+    key: keyof ActiveFilters,
+    label: string,
+    options: string[],
+    placeholder: string,
+    disabled: boolean = false
+  ) => {
+    const comboboxOptions = [
+      { value: "__ALL__", label: "Todos" },
+      ...options.map(opt => ({ value: opt, label: opt }))
+    ];
+
+    return (
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">{label}</Label>
+        <Combobox
+          value={activeFilters[key] || "__ALL__"}
+          onChange={(value) => updateFilter(key, value === "__ALL__" ? undefined : value)}
+          options={comboboxOptions}
+          placeholder={placeholder}
+          searchPlaceholder="Pesquisar..."
+          noResultsMessage="Nenhum resultado encontrado."
+          disabled={disabled}
+        />
+      </div>
+    );
   };
 
   return (
-    <div className={`bg-white ${isOpen ? 'p-6' : 'p-3'} rounded-lg shadow-sm border mb-6`}>
-      <div
-        className="flex items-center justify-between mb-2 cursor-pointer select-none"
-        onClick={() => setIsOpen(prev => !prev)}
-        aria-expanded={isOpen}
-        aria-controls="history-filters-content"
-      >
-        <h2 className="text-lg font-semibold">Filtros</h2>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
-      {isOpen && (
-        <div id="history-filters-content">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <Input type="date" value={activeFilters.dataInicio || ''} onChange={(e) => handleInputChange('dataInicio', e.target.value)} />
-            <Input type="date" value={activeFilters.dataFim || ''} onChange={(e) => handleInputChange('dataFim', e.target.value)} />
-            {Object.keys(options).map((key) => {
-              const filterKey = keyMap[key as keyof typeof keyMap];
-              const opts = options[key as keyof HistoryFilterOptions].map(o => ({ value: o, label: o }));
-              const isVendedorField = key === 'vendedores';
-              const shouldDisable = isVendedorField && user?.role === 'vendedor';
-              
-              return (
-              <Combobox 
-                key={key} 
-                options={opts}
-                value={activeFilters[filterKey] || ''}
-                onChange={(value) => handleInputChange(filterKey, value)}
-                placeholder={`Selecionar ${key}`}
-                searchPlaceholder="Pesquisar..."
-                noResultsMessage="Nenhum resultado encontrado."
-                disabled={shouldDisable}
-              />
-            )})}
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Filter className="h-5 w-5 text-primary" />
+          Filtros do Histórico
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Filtros de Data */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Data Início</Label>
+            <Input
+              type="date"
+              value={activeFilters.dataInicio || ''}
+              onChange={(e) => updateFilter('dataInicio', e.target.value || undefined)}
+              className="bg-background"
+            />
           </div>
-          <div className="flex gap-2">
-            <Button onClick={onApply}>Aplicar Filtros</Button>
-            <Button onClick={onClear} variant="outline">Limpar Filtros</Button>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Data Fim</Label>
+            <Input
+              type="date"
+              value={activeFilters.dataFim || ''}
+              onChange={(e) => updateFilter('dataFim', e.target.value || undefined)}
+              className="bg-background"
+            />
           </div>
+
+          {/* Demais Filtros */}
+          {renderSelectField('cliente', 'Cliente', filterOptions.cliente, 'Selecione um cliente')}
+          {renderSelectField('cidade', 'Cidade', filterOptions.cidade, 'Selecione uma cidade')}
+          {renderSelectField('estado', 'Estado', filterOptions.estado, 'Selecione um estado')}
+          {renderSelectField('categoria', 'Categoria', filterOptions.categoria, 'Selecione uma categoria')}
+          {renderSelectField('vendedor', 'Vendedor', filterOptions.vendedor, 'Selecione um vendedor', user?.role === 'vendedor')}
+          {renderSelectField('regional', 'Regional', filterOptions.regional, 'Selecione uma regional', user?.role === 'gerente')}
         </div>
-      )}
-    </div>
+
+        <div className="flex justify-between items-center mt-6 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={onClearFilters}
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Limpar Filtros
+          </Button>
+
+          <Button
+            onClick={onApplyFilters}
+            disabled={isLoading}
+            className="bg-gradient-primary hover:opacity-90 min-w-[120px]"
+          >
+            {isLoading ? 'Analisando...' : 'Aplicar Filtros'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

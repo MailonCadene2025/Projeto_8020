@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import { YearOverYearFilters, YearOverYearFilterOptions, ActiveYearOverYearFilters } from '@/components/YearOverYearFilters';
+import { YearOverYearFilters } from '@/components/YearOverYearFilters';
+import type { FilterOptions as YearOverYearFilterOptions, ActiveFilters as BaseActiveFilters } from '@/components/YearOverYearFilters';
 import { GoogleSheetsService, HistoryData } from '@/services/googleSheetsService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -32,6 +33,8 @@ interface YearOverYearData {
   crescimentoPercentual: number;
 }
 
+type ActiveYearOverYearFilters = BaseActiveFilters & { dataInicio?: string; dataFim?: string };
+
 const YearOverYear = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -40,9 +43,10 @@ const YearOverYear = () => {
   const [filteredData, setFilteredData] = useState<YearOverYearData[]>([]);
   const [sortKey, setSortKey] = useState<keyof YearOverYearData | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filterOptions, setFilterOptions] = useState<YearOverYearFilterOptions>({ clientes: [], categorias: [], regionais: [], estados: [], cidades: [], vendedores: [] });
+  const [filterOptions, setFilterOptions] = useState<YearOverYearFilterOptions>({ cliente: [], categoria: [], regional: [], estado: [], cidade: [], vendedor: [] });
   const [activeFilters, setActiveFilters] = useState<ActiveYearOverYearFilters>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,19 +70,29 @@ const YearOverYear = () => {
           : allVendedores;
 
         setFilterOptions({
-          clientes: extractUnique(historyData, 'nomeFantasia').sort(),
-          categorias: extractUnique(historyData, 'categoria').sort(),
-          regionais: extractUnique(historyData, 'regional').sort(),
-          estados: extractUnique(historyData, 'uf').sort(),
-          cidades: extractUnique(historyData, 'cidade').sort(),
-          vendedores: vendedoresOptions,
+          cliente: extractUnique(historyData, 'nomeFantasia').sort(),
+          categoria: extractUnique(historyData, 'categoria').sort(),
+          regional: extractUnique(historyData, 'regional').sort(),
+          estado: extractUnique(historyData, 'uf').sort(),
+          cidade: extractUnique(historyData, 'cidade').sort(),
+          vendedor: vendedoresOptions,
         });
 
-        // Aplicar filtros automáticos para vendedor
+        // Aplicar filtros automáticos
         let initialFilters: ActiveYearOverYearFilters = {};
         
         if (user && user.role === 'vendedor' && user.vendedor) {
           initialFilters.vendedor = user.vendedor;
+        }
+        
+        // Trava de regional para gerente (regional 3)
+        if (user && user.role === 'gerente') {
+          const regionaisOpts = extractUnique(historyData, 'regional').sort();
+          const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+          const regional3Value = regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+          if (regional3Value) {
+            initialFilters.regional = regional3Value;
+          }
         }
 
         setActiveFilters(initialFilters);
@@ -200,7 +214,17 @@ const YearOverYear = () => {
     let clearedFilters: ActiveYearOverYearFilters = {};
     
     if (user && user.role === 'vendedor' && user.vendedor) {
-      clearedFilters = { vendedor: user.vendedor };
+      clearedFilters.vendedor = user.vendedor;
+    }
+    
+    // Manter trava de regional 3 para gerente
+    if (user && user.role === 'gerente') {
+      const regionaisOpts = [...new Set(rawData.map(item => item.regional).filter(Boolean))] as string[];
+      const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+      const regional3Value = regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+      if (regional3Value) {
+        clearedFilters.regional = regional3Value;
+      }
     }
     
     setActiveFilters(clearedFilters);
@@ -212,7 +236,9 @@ const YearOverYear = () => {
       title: "Filtros limpos",
       description: user?.role === 'vendedor' 
         ? "Filtros limpos. Filtro de vendedor mantido."
-        : "Mostrando todos os dados disponíveis.",
+        : user?.role === 'gerente' 
+          ? "Filtros limpos. Regional 3 mantida."
+          : "Mostrando todos os dados disponíveis.",
     });
   };
 
@@ -285,13 +311,25 @@ const YearOverYear = () => {
           <h1 className="text-2xl font-bold">Comparativo Year Over Year - 2024 vs 2025</h1>
         </div>
         
-        <YearOverYearFilters 
-          options={filterOptions} 
-          activeFilters={activeFilters} 
-          onFilterChange={setActiveFilters} 
-          onApply={handleApplyFilters} 
-          onClear={handleClearFilters} 
-        />
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Filtros</h2>
+            <Button variant="ghost" size="sm" onClick={() => setFiltersCollapsed(c => !c)}>
+              {filtersCollapsed ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronUp className="h-4 w-4 mr-1" />}
+              {filtersCollapsed ? 'Expandir' : 'Colapsar'}
+            </Button>
+          </div>
+          {!filtersCollapsed && (
+            <YearOverYearFilters 
+              filterOptions={filterOptions} 
+              activeFilters={activeFilters} 
+              onFilterChange={setActiveFilters} 
+              onApplyFilters={handleApplyFilters} 
+              onClearFilters={handleClearFilters} 
+              isLoading={isLoading}
+            />
+          )}
+        </div>
         
         {/* Gráfico de Evolução */}
         <Card className="mb-6">

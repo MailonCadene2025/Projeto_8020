@@ -1,117 +1,62 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User, Shield, TrendingUp, Clock, BarChart3, Box, Package } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleYearOverYearClick = () => {
-    navigate('/year-over-year');
-  };
+  const navLinks = [
+    { label: '📊 80/20 - Clientes', path: '/pareto-clientes' },
+    { label: '📦 80/20 - Produtos', path: '/pareto-produtos' },
+    { label: '📈 Histórico de Compras', path: '/history' },
+    { label: '📉 Comparação Anual', path: '/year-over-year' },
+    { label: '🎁 Demonstrações', path: '/demo-comodatos' },
+    { label: '📊 Leads', path: '/leads' },
+  ];
 
-  const handleHistoryClick = () => {
-    navigate('/history');
-  };
-
-  const handleParetoClick = () => {
-    navigate('/pareto-clientes');
-  };
-
-  const handleParetoProdutosClick = () => {
-    navigate('/pareto-produtos');
-  };
-
-  const handleDemoComodatosClick = () => {
-    navigate('/demo-comodatos');
-  };
+  const isActive = (path: string) => location.pathname.startsWith(path);
 
   return (
-    <header className="bg-card border-b border-border px-6 py-4">
+    <header className="bg-white border-b shadow-sm px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <img src="https://i.ibb.co/BpTtpvT/logo3.png" alt="logo3" className="h-8 w-auto" />
-          <h1 className="text-2xl font-bold" style={{color: '#085c2b'}}>Central De Inteligencia Comercial - Terris</h1>
+        {/* Left: Logo + Title */}
+        <div className="flex items-center gap-3">
+          <div className="bg-green-600 text-white px-3 py-1 rounded-lg font-bold text-base">TS</div>
+          <span className="text-slate-700 text-sm">Central de Inteligência Comercial - Terris</span>
         </div>
-        
-        <div className="flex items-center space-x-4">
-          {/* Botão 80/20 - Clientes */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleParetoClick}
-            className="flex items-center space-x-2"
-          >
-            <BarChart3 className="h-4 w-4" />
-            <span>80/20 - Clientes</span>
-          </Button>
 
-          {/* Botão 80/20 - Produtos */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleParetoProdutosClick}
-            className="flex items-center space-x-2"
-          >
-            <Package className="h-4 w-4" />
-            <span>80/20 - Produtos</span>
-          </Button>
-          
-          {/* Botão Histórico de Compras */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleHistoryClick}
-            className="flex items-center space-x-2"
-          >
-            <Clock className="h-4 w-4" />
-            <span>Histórico de Compras</span>
-          </Button>
-          
-          {/* Botão Year Over Year */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleYearOverYearClick}
-            className="flex items-center space-x-2"
-          >
-            <TrendingUp className="h-4 w-4" />
-            <span>Comparação Anual</span>
-          </Button>
+        {/* Right: Navigation + User + Logout */}
+        <div className="flex items-center gap-2">
+          {navLinks.map(({ label, path }) => (
+            <Button
+              key={path}
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(path)}
+              className={
+                `${isActive(path) ? 'bg-slate-100 text-green-600' : 'text-slate-600 hover:bg-slate-100 hover:text-green-600'} ` +
+                'px-3 py-2 rounded-md transition'
+              }
+            >
+              {label}
+            </Button>
+          ))}
 
-          {/* Botão Demonstrações e Comodatos */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleDemoComodatosClick}
-            className="flex items-center space-x-2"
-          >
-            <Box className="h-4 w-4" />
-            <span>Demonstrações e Comodatos</span>
-          </Button>
-          
-          <div className="flex items-center space-x-2 text-sm">
-            {user?.role === 'admin' ? (
-              <Shield className="h-4 w-4 text-primary" />
-            ) : (
-              <User className="h-4 w-4 text-muted-foreground" />
-            )}
-            <span className="font-medium">{user?.username}</span>
-            {user?.role === 'vendedor' && (
-              <span className="text-muted-foreground">({user.vendedor})</span>
-            )}
+          <div className="px-3 py-2 rounded-md bg-slate-50 text-slate-700 text-sm">
+            {`👤 ${user?.role ?? ''}`}
+            {user?.role === 'vendedor' && user.vendedor ? ` (${user.vendedor})` : ''}
           </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={logout}
-            className="flex items-center space-x-2"
+            className="text-slate-700 hover:text-green-700 hover:border-green-600"
           >
-            <LogOut className="h-4 w-4" />
-            <span>Sair</span>
+            🚪 Sair
           </Button>
         </div>
       </div>

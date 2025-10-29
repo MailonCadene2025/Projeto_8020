@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
   username: string;
-  role: 'admin' | 'vendedor';
+  role: 'admin' | 'vendedor' | 'gerente';
   vendedor?: string;
 }
 
@@ -17,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const users = [
   { username: 'admin', password: 'admin@951', role: 'admin' as const },
+  { username: 'João', password: 'joao@753', role: 'gerente' as const },
   { username: 'Nara', password: 'Nara@753', role: 'vendedor' as const, vendedor: 'NARA' },
   { username: 'Matheus', password: 'matheus@753', role: 'vendedor' as const, vendedor: 'MATHEUS' },
   { username: 'Luiz', password: 'luiz@753', role: 'vendedor' as const, vendedor: 'LUIZ' },

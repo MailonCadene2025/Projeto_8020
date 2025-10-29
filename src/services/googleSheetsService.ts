@@ -45,6 +45,32 @@ interface ApiResponse {
   };
 }
 
+export interface LeadData {
+  dataCriacao: string;
+  nome: string;
+  produto: string;
+  empresa: string;
+  telefone: string;
+  endereco: string;
+  cidade: string;
+  uf: string;
+  vendedor: string;
+  equipe: string;
+  etapaFunil: string;
+  trafego: string;
+  fonte: string;
+  campanha: string;
+  valorCampanha: number;
+  valorUsado: number;
+  qualificacao: number;
+  valor_unico: number;
+  valor_recorrente: number;
+  anotacoes: string;
+  motivoPerda: string;
+  estadoNegociacao: string;
+  ticketMedio: number;
+}
+
 export class GoogleSheetsService {
   private apiKey: string;
   private sheetId: string;
@@ -182,6 +208,60 @@ export class GoogleSheetsService {
     } catch (error) {
       console.error('Erro ao buscar dados de demonstrações/comodatos:', error);
       throw error instanceof Error ? error : new Error('Erro desconhecido ao buscar dados de demonstrações/comodatos');
+    }
+  }
+
+  async fetchLeadsData(range: string = 'LEADS!A:Z'): Promise<LeadData[]> {
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.sheetId}/values/${range}?key=${this.apiKey}`;
+      const response = await fetch(url);
+      const data: ApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Erro ao conectar com Google Sheets');
+      }
+
+      if (!data.values || data.values.length === 0) {
+        return [];
+      }
+
+      const rows = data.values.slice(1);
+
+      return rows.map((row): LeadData => ({
+        // CSV columns:
+        // A: Nome, B: Categoria (usada como produto), C: Estado (UF), D: Cidade, E: Endereço,
+        // F: Trafego, G: Empresa, H: Qualificação, I: Funil de vendas, J: Etapa,
+        // K: Estado (status textual), L: Motivo de Perda, M: Valor Único, N: Valor Recorrente,
+        // O: Pausada (Ticket Médio do Produto), P: Data de criação, Q: Fonte, R: Campanha, S: valor da campanha,
+        // T: valor usado, U: Responsável, V: Produtos, W: Equipes do responsável,
+        // X: Anotação do motivo de perda, Y: Contatos, Z: Telefone
+        nome: row[0] || '',
+        produto: row[1] || '',
+        uf: row[2] || '',
+        cidade: row[3] || '',
+        endereco: row[4] || '',
+        trafego: row[5] || '',
+        empresa: row[6] || '',
+        qualificacao: parseInt(row[7]) || 0,
+        etapaFunil: row[9] || '',
+        estadoNegociacao: row[10] || '',
+        motivoPerda: row[11] || '',
+        valor_unico: parseInt(row[12]) || 0,
+        valor_recorrente: parseInt(row[13]) || 0,
+        ticketMedio: this.parseValue(row[14] || '0'),
+        dataCriacao: row[15] || '',
+        fonte: row[16] || '',
+        campanha: row[17] || '',
+        valorCampanha: this.parseValue(row[18] || '0'),
+        valorUsado: this.parseValue(row[19] || '0'),
+        vendedor: row[20] || '',
+        equipe: row[22] || '',
+        anotacoes: row[23] || '',
+        telefone: row[25] || ''
+      }));
+    } catch (error) {
+      console.error('Erro ao buscar dados de leads:', error);
+      throw error instanceof Error ? error : new Error('Erro desconhecido ao buscar dados de leads');
     }
   }
 

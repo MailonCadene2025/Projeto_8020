@@ -13,6 +13,7 @@ import YearOverYear from "./pages/YearOverYear";
 import DemoComodatos from "./pages/DemoComodatos";
 import ParetoProdutos from "./pages/ParetoProdutos";
 import Index from "./pages/Index";
+import LeadsCRM from "./pages/LeadsCRM";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Index />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/leads" 
+              element={
+                <ProtectedRoute>
+                  <LeadsCRM />
                 </ProtectedRoute>
               } 
             />

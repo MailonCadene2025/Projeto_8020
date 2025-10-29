@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Compras 2024/2025 - Melhorado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* KPIs em Destaque */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .kpi-card.revenue { border-color: #27ae60; }
+        .kpi-card.orders { border-color: #3498db; }
+        .kpi-card.avg-ticket { border-color: #9b59b6; }
+        .kpi-card.top-vendor { border-color: #e67e22; }
+
+        .kpi-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .kpi-trend {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .kpi-trend.positive { color: #27ae60; }
+        .kpi-trend.neutral { color: #7f8c8d; }
+
+        /* Filtros */
+        .filters {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .filters-header h3 {
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        .filter-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .filter-input {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-input label {
+            font-size: 13px;
+            color: #5a6c7d;
+            font-weight: 500;
+        }
+
+        .filter-input input,
+        .filter-input select {
+            padding: 10px 12px;
+            border: 1px solid #dfe4ea;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .filter-input input:focus,
+        .filter-input select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .quick-filters {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #dfe4ea;
+            background: white;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-filter-btn:hover {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .quick-filter-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        /* Tabela */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h3 {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .export-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5a6c7d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #ecf0f1;
+            transition: background 0.2s;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tbody tr:hover {
+            background: #e8f4fd;
+        }
+
+        td {
+            padding: 18px 20px;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .client-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .client-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .client-location {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tag.uf {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .tag.category {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .value-cell {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .value-highlight {
+            color: #27ae60;
+            font-size: 15px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border: none;
+            background: #ecf0f1;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .pagination {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 8px 14px;
+            border: 1px solid #dfe4ea;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .page-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        @media (max-width: 768px) {
+            .kpi-container {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 12px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Histórico de Compras 2024/2025</h1>
+        <p>Central de Inteligência Comercial - Tetris</p>
+    </div>
+
+    <!-- KPIs em Destaque -->
+    <div class="kpi-container">
+        <div class="kpi-card revenue">
+            <div class="kpi-label">Receita Total</div>
+            <div class="kpi-value">R$ 36.665,48</div>
+            <div class="kpi-trend positive">↗ +12,5% vs mês anterior</div>
+        </div>
+
+        <div class="kpi-card orders">
+            <div class="kpi-label">Total de Pedidos</div>
+            <div class="kpi-value">9</div>
+            <div class="kpi-trend neutral">→ Período: Jan 2024</div>
+        </div>
+
+        <div class="kpi-card avg-ticket">
+            <div class="kpi-label">Ticket Médio</div>
+            <div class="kpi-value">R$ 4.073,94</div>
+            <div class="kpi-trend positive">↗ +8,2% vs média</div>
+        </div>
+
+        <div class="kpi-card top-vendor">
+            <div class="kpi-label">Top Vendedor</div>
+            <div class="kpi-value">MATHEUS</div>
+            <div class="kpi-trend neutral">4 vendas - R$ 19.140</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters">
+        <div class="filters-header">
+            <h3>🔍 Filtros</h3>
+        </div>
+        
+        <div class="filter-group">
+            <div class="filter-input">
+                <label>Período</label>
+                <input type="date" value="2024-01-01">
+            </div>
+            <div class="filter-input">
+                <label>até</label>
+                <input type="date" value="2024-01-31">
+            </div>
+            <div class="filter-input">
+                <label>Cliente</label>
+                <input type="text" placeholder="Buscar por nome...">
+            </div>
+            <div class="filter-input">
+                <label>Vendedor</label>
+                <select>
+                    <option value="">Todos</option>
+                    <option value="matheus">MATHEUS</option>
+                    <option value="sara">SARA</option>
+                    <option value="luiz">LUIZ</option>
+                    <option value="itacir">ITACIR</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="quick-filters">
+            <button class="quick-filter-btn active">Este Mês</button>
+            <button class="quick-filter-btn">Último Trimestre</button>
+            <button class="quick-filter-btn">2024</button>
+            <button class="quick-filter-btn">Top Clientes</button>
+            <button class="quick-filter-btn">Limpar Filtros</button>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3>Detalhamento de Compras</h3>
+            <button class="export-btn">📥 Exportar Excel</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Local</th>
+                    <th>Categoria</th>
+                    <th>Forma Pgto</th>
+                    <th>NF</th>
+                    <th>Vendedor</th>
+                    <th>Qtd</th>
+                    <th>Valor Unit.</th>
+                    <th class="value-cell">Total</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>03/01/2024</td>
+                    <td>
+                        <div class="client-info">
+                            <span class="client-name">BOCALON COM. MÁQ. AGRÍCOLA</span>
+                            <span class="client-location">Ibiraiaras, RS</span>
+                        </div>
+                    </td>
+                    <td><span class="tag uf">RS</span></td>
+                    <td><span class="tag category">GT-500</span></td>
+                    <td>3 x BOLETO</td>
+                    <td>6570</td>
+                    <td>NARA</td>
+                    <td>3</td>
+                    <td>R$ 5.775,00</td>
+                    <td class="value-cell"><span class="value-highlight">R$ 17.325,00</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" title="Ver detalhes">👁️</button>
+                            <button class="action-btn" title="Duplicar">📋</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>03/01/2024</td>
+                    <td>
+                        <div class="client-info">
+                            <span class="client-name">NOVA TRATORES MÁQ. AGRÍCOLAS</span>
+                            <span class="client-location">Piraju, SP</span>
+                        </div>
+                    </td>
+                    <td><span class="tag uf">SP</span></td>
+                    <td><span class="tag category">GT-500</span></td>
+                    <td>3 x BOLETO</td>
+                    <td>6568</td>
+                    <td>ITACIR</td>
+                    <td>2</td>
+                    <td>R$ 5.775,00</td>
+                    <td class="value-cell"><span class="value-highlight">R$ 11.550,00</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" title="Ver detalhes">👁️</button>
+                            <button class="action-btn" title="Duplicar">📋</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>03/01/2024</td>
+                    <td>
+                        <div class="client-info">
+                            <span class="client-name">TIAGO TRATORES</span>
+                            <span class="client-location">Quitandinha, PR</span>
+                        </div>
+                    </td>
+                    <td><span class="tag uf">PR1</span></td>
+                    <td><span class="tag category">GT-500</span></td>
+                    <td>4 x BOLETO</td>
+                    <td>6569</td>
+                    <td>MATHEUS</td>
+                    <td>1</td>
+                    <td>R$ 5.775,00</td>
+                    <td class="value-cell"><span class="value-highlight">R$ 5.775,00</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" title="Ver detalhes">👁️</button>
+                            <button class="action-btn" title="Duplicar">📋</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>04/01/2024</td>
+                    <td>
+                        <div class="client-info">
+                            <span class="client-name">PLANTA MÁQUINAS AGRÍCOLAS</span>
+                            <span class="client-location">São Miguel do Iguaçu, PR</span>
+                        </div>
+                    </td>
+                    <td><span class="tag uf">PR1</span></td>
+                    <td><span class="tag category">TM-250</span></td>
+                    <td>1 x BOLETO</td>
+                    <td>6575</td>
+                    <td>MATHEUS</td>
+                    <td>1</td>
+                    <td>R$ 1.070,00</td>
+                    <td class="value-cell"><span class="value-highlight">R$ 1.070,00</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" title="Ver detalhes">👁️</button>
+                            <button class="action-btn" title="Duplicar">📋</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>04/01/2024</td>
+                    <td>
+                        <div class="client-info">
+                            <span class="client-name">TECNOAGRI LTDA</span>
+                            <span class="client-location">Água Boa, MT</span>
+                        </div>
+                    </td>
+                    <td><span class="tag uf">MT</span></td>
+                    <td><span class="tag category">GT-500</span></td>
+                    <td>2 x BOLETO</td>
+                    <td>6573</td>
+                    <td>LUIZ</td>
+                    <td>1</td>
+                    <td>R$ 6.800,00</td>
+                    <td class="value-cell"><span class="value-highlight">R$ 6.800,00</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" title="Ver detalhes">👁️</button>
+                            <button class="action-btn" title="Duplicar">📋</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>04/01/2024</td>
+                    <td>
+                        <div class="client-info">
+                            <span class="client-name">TERRA MAIS PEÇAS E SERVIÇOS</span>
+                            <span class="client-location">Pato Branco, PR</span>
+                        </div>
+                    </td>
+                    <td><span class="tag uf">PR1</span></td>
+                    <td><span class="tag category">PEÇAS</span></td>
+                    <td>1 x PIX</td>
+                    <td>6578</td>
+                    <td>MATHEUS</td>
+                    <td>2</td>
+                    <td>R$ 170,00</td>
+                    <td class="value-cell"><span class="value-highlight">R$ 340,00</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" title="Ver detalhes">👁️</button>
+                            <button class="action-btn" title="Duplicar">📋</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>05/01/2024</td>
+                    <td>
+                        <div class="client-info">
+                            <span class="client-name">AGRIGEO - RODRIGO</span>
+                            <span class="client-location">Santa Vitória, MG</span>
+                        </div>
+                    </td>
+                    <td><span class="tag uf">MG</span></td>
+                    <td><span class="tag category">GT-500</span></td>
+                    <td>3 x BOLETO</td>
+                    <td>6582</td>
+                    <td>SARA</td>
+                    <td>1</td>
+                    <td>R$ 6.000,00</td>
+                    <td class="value-cell"><span class="value-highlight">R$ 6.000,00</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" title="Ver detalhes">👁️</button>
+                            <button class="action-btn" title="Duplicar">📋</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>05/01/2024</td>
+                    <td>
+                        <div class="client-info">
+                            <span class="client-name">AGRISUL COM. PEÇAS E IMPL. AGR. EIRELI</span>
+                            <span class="client-location">Paragominas, PA</span>
+                        </div>
+                    </td>
+                    <td><span class="tag uf">PA</span></td>
+                    <td><span class="tag category">PEÇAS</span></td>
+                    <td>3 x BOLETO</td>
+                    <td>6579</td>
+                    <td>SARA</td>
+                    <td>10</td>
+                    <td>R$ 178,99</td>
+                    <td class="value-cell"><span class="value-highlight">R$ 1.789,90</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn" title="Ver detalhes">👁️</button>
+                            <button class="action-btn" title="Duplicar">📋</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            <div class="pagination-info">Mostrando 1-8 de 9 registros</div>
+            <div class="pagination-controls">
+                <button class="page-btn">Anterior</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">Próximo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Interatividade dos filtros rápidos
+        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Hover nas linhas da tabela para destacar
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                console.log('Linha clicada:', this);
+                // Aqui você pode adicionar mais funcionalidades
+            });
+        });
+    </script>
+</body>
+</html>

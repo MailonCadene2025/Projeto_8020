@@ -141,7 +141,7 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
             {renderSelectField('estado', 'Estado', filterOptions.estados, 'Selecione um estado')}
             {renderSelectField('categoria', 'Categoria', filterOptions.categorias, 'Selecione uma categoria')}
             {renderSelectField('vendedor', 'Vendedor', filterOptions.vendedores, 'Selecione um vendedor', user?.role === 'vendedor')}
-            {renderSelectField('regional', 'Regional', filterOptions.regionais, 'Selecione uma regional')}
+            {renderSelectField('regional', 'Regional', filterOptions.regionais, 'Selecione uma regional', user?.role === 'gerente')}
             {renderSelectField('tipoCliente', 'Tipo Cliente', filterOptions.tiposCliente, 'Selecione um tipo')}
           </div>
 

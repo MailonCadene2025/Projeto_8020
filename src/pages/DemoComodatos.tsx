@@ -1,13 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import { HistoryFilters, HistoryFilterOptions, ActiveHistoryFilters } from '@/components/HistoryFilters';
+import { HistoryFilters } from '@/components/HistoryFilters';
+import type { FilterOptions as HistoryFilterOptions, ActiveFilters as BaseActiveFilters } from '@/components/HistoryFilters';
+type ActiveHistoryFilters = BaseActiveFilters & {
+  dataInicio?: string;
+  dataFim?: string;
+};
 import { GoogleSheetsService, DemoComodatosData } from '@/services/googleSheetsService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 
 const API_KEY = 'AIzaSyCd7d1FcI_61TgM_WB6G4T9ao7BkHT45J8';
 const SHEET_ID = '1p7cRvyWsNQmZRrvWPKU2Wxx380jzqxMKhmgmsvTZ0u8';
@@ -19,9 +24,10 @@ const DemoComodatos = () => {
   const [filteredData, setFilteredData] = useState<DemoComodatosData[]>([]);
   const [sortKey, setSortKey] = useState<'diasEmCampo' | keyof DemoComodatosData | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filterOptions, setFilterOptions] = useState<HistoryFilterOptions>({ clientes: [], categorias: [], regionais: [], estados: [], cidades: [], vendedores: [] });
+  const [filterOptions, setFilterOptions] = useState<HistoryFilterOptions>({ cliente: [], categoria: [], regional: [], estado: [], cidade: [], vendedor: [] });
   const [activeFilters, setActiveFilters] = useState<ActiveHistoryFilters>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -46,12 +52,12 @@ const DemoComodatos = () => {
           : allVendedores;
 
         setFilterOptions({
-          clientes: extractUnique(demoData, 'nomeFantasia').sort(),
-          categorias: extractUnique(demoData, 'categoria').sort(),
-          regionais: extractUnique(demoData, 'regional').sort(),
-          estados: extractUnique(demoData, 'uf').sort(),
-          cidades: extractUnique(demoData, 'cidade').sort(),
-          vendedores: vendedoresOptions,
+          cliente: extractUnique(demoData, 'nomeFantasia').sort(),
+          categoria: extractUnique(demoData, 'categoria').sort(),
+          regional: extractUnique(demoData, 'regional').sort(),
+          estado: extractUnique(demoData, 'uf').sort(),
+          cidade: extractUnique(demoData, 'cidade').sort(),
+          vendedor: vendedoresOptions,
         });
 
         let initialFilteredData = demoData;
@@ -60,6 +66,17 @@ const DemoComodatos = () => {
         if (user && user.role === 'vendedor' && user.vendedor) {
           initialFilters.vendedor = user.vendedor;
           initialFilteredData = initialFilteredData.filter(item => item.vendedor === user.vendedor);
+        }
+
+        // Trava de regional para gerente (regional 3)
+        if (user && user.role === 'gerente') {
+          const regionais = extractUnique(demoData, 'regional');
+          const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+          const regional3Value = regionais.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+          if (regional3Value) {
+            initialFilters.regional = regional3Value;
+            initialFilteredData = initialFilteredData.filter(item => item.regional === regional3Value);
+          }
         }
 
         setActiveFilters(initialFilters);
@@ -115,12 +132,23 @@ const DemoComodatos = () => {
       clearedFilters = { vendedor: user.vendedor };
     }
 
+    // Se o usuário for gerente, manter regional 3
+    if (user && user.role === 'gerente') {
+      const regionais = [...new Set(data.map(item => item.regional).filter(Boolean))] as string[];
+      const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+      const regional3Value = regionais.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+      if (regional3Value) {
+        clearedFilters = { ...(clearedFilters as ActiveHistoryFilters), regional: regional3Value };
+      }
+    }
+
     setActiveFilters(clearedFilters as ActiveHistoryFilters);
 
     let dataToShow = data;
     if (Object.keys(clearedFilters).length > 0) {
       dataToShow = data.filter(item => {
         if ('vendedor' in (clearedFilters as { vendedor: string }) && item.vendedor !== (clearedFilters as { vendedor: string }).vendedor) return false;
+        if ('regional' in (clearedFilters as { regional: string }) && item.regional !== (clearedFilters as { regional: string }).regional) return false;
         return true;
       });
     }
@@ -129,7 +157,11 @@ const DemoComodatos = () => {
 
     toast({
       title: 'Filtros limpos',
-      description: user?.role === 'vendedor' ? 'Filtros limpos. Filtro de vendedor mantido.' : 'Mostrando todos os dados disponíveis.',
+      description: user?.role === 'vendedor' 
+        ? 'Filtros limpos. Filtro de vendedor mantido.' 
+        : user?.role === 'gerente' 
+          ? 'Filtros limpos. Regional 3 mantida.' 
+          : 'Mostrando todos os dados disponíveis.',
     });
   };
 
@@ -278,30 +310,37 @@ const DemoComodatos = () => {
   </div>
 </div>
 
-<div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
-  <div className="flex justify-between items-center p-4 border-b">
-    <div className="flex gap-2 flex-wrap items-center">
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Buscar por cliente, vendedor ou cidade..."
-        className="border rounded-md px-3 py-2 w-80 focus:outline-none focus:ring-2 focus:ring-green-500"
-      />
-      <Button variant="outline" onClick={handleOpenFilters}>Filtros</Button>
-      <Button variant="outline" onClick={handleOpenFilters}>Período</Button>
-    </div>
-    <Button onClick={handleExport} className="bg-green-600 hover:bg-green-700 text-white">Exportar</Button>
+<div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
+  <div className="flex items-center justify-between mb-4">
+    <h2 className="text-lg font-semibold">Filtros</h2>
+    <Button variant="ghost" size="sm" onClick={() => setFiltersCollapsed(c => !c)}>
+      {filtersCollapsed ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronUp className="h-4 w-4 mr-1" />}
+      {filtersCollapsed ? 'Expandir' : 'Colapsar'}
+    </Button>
   </div>
+  {!filtersCollapsed && (
+    <HistoryFilters 
+      filterOptions={filterOptions} 
+      activeFilters={activeFilters} 
+      onFilterChange={setActiveFilters} 
+      onApplyFilters={handleApplyFilters} 
+      onClearFilters={handleClearFilters} 
+      isLoading={isLoading}
+    />
+  )}
 </div>
 
-<HistoryFilters 
-  options={filterOptions} 
-  activeFilters={activeFilters} 
-  onFilterChange={setActiveFilters} 
-  onApply={handleApplyFilters} 
-  onClear={handleClearFilters} 
-/>
+<div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
+  <div className="flex gap-2 items-center">
+    <input
+      type="text"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="Buscar por cliente, vendedor ou cidade..."
+      className="border rounded-md px-3 py-2 w-full md:w-96 focus:outline-none focus:ring-2 focus:ring-green-500"
+    />
+  </div>
+</div>
 
         {isLoading ? (
           <p>Carregando...</p>

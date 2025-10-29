@@ -7,9 +7,10 @@ import { ParetoProductsChart } from '@/components/ParetoProductsChart';
 import { GoogleSheetsService, SalesData } from '@/services/googleSheetsService';
 import { ParetoProductsAnalysisService } from '@/services/paretoProductsAnalysisService';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/Header';
+import { Button } from '@/components/ui/button';
 
 const ParetoProdutos = () => {
   const { user } = useAuth();
@@ -47,6 +48,7 @@ const ParetoProdutos = () => {
   }>>([]);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const { toast } = useToast();
 
   const handleConnect = async (apiKey: string, sheetId: string) => {
@@ -85,6 +87,18 @@ const ParetoProdutos = () => {
         filtersToApply = { vendedor: user.vendedor };
         filteredData = GoogleSheetsService.filterData(data, filtersToApply);
         setActiveFilters(filtersToApply);
+      }
+
+      // Trava de regional para gerente (regional 3)
+      if (user && user.role === 'gerente') {
+        const regionaisOpts = GoogleSheetsService.extractUniqueValues(data, 'regional');
+        const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+        const regional3Value = regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+        if (regional3Value) {
+          filtersToApply = { ...filtersToApply, regional: regional3Value };
+          filteredData = GoogleSheetsService.filterData(data, filtersToApply);
+          setActiveFilters(filtersToApply);
+        }
       }
 
       setFilteredData(filteredData);
@@ -137,6 +151,16 @@ const ParetoProdutos = () => {
       clearedFilters = { vendedor: user.vendedor };
     }
 
+    // Se o usuário for gerente, manter regional 3
+    if (user && user.role === 'gerente') {
+      const regionaisOpts = GoogleSheetsService.extractUniqueValues(rawData, 'regional');
+      const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+      const regional3Value = regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+      if (regional3Value) {
+        clearedFilters = { ...clearedFilters, regional: regional3Value };
+      }
+    }
+
     setActiveFilters(clearedFilters);
 
     let dataToAnalyze = rawData;
@@ -151,7 +175,9 @@ const ParetoProdutos = () => {
       title: 'Filtros limpos',
       description: user?.role === 'vendedor' 
         ? 'Filtros limpos. Filtro de vendedor mantido.'
-        : 'Mostrando todos os dados disponíveis.',
+        : user?.role === 'gerente'
+          ? 'Filtros limpos. Regional 3 mantida.'
+          : 'Mostrando todos os dados disponíveis.',
     });
   };
 
@@ -173,6 +199,15 @@ const ParetoProdutos = () => {
   useEffect(() => {
     if (user && user.role === 'vendedor' && user.vendedor && rawData.length > 0) {
       const newFilters = { ...activeFilters, vendedor: user.vendedor };
+      setActiveFilters(newFilters);
+      const filtered = GoogleSheetsService.filterData(rawData, newFilters);
+      setFilteredData(filtered);
+      performAnalysis(filtered);
+    } else if (user && user.role === 'gerente' && rawData.length > 0) {
+      const regionaisOpts = GoogleSheetsService.extractUniqueValues(rawData, 'regional');
+      const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+      const regional3Value = regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+      const newFilters: ActiveFilters = regional3Value ? { ...activeFilters, regional: regional3Value } : { ...activeFilters };
       setActiveFilters(newFilters);
       const filtered = GoogleSheetsService.filterData(rawData, newFilters);
       setFilteredData(filtered);
@@ -199,15 +234,26 @@ const ParetoProdutos = () => {
 
         {isConnected && (
           <>
-            <ParetoFilters 
-              filterOptions={filterOptions}
-              activeFilters={activeFilters}
-              onFilterChange={setActiveFilters}
-              onApplyFilters={handleApplyFilters}
-              onClearFilters={handleClearFilters}
-              isLoading={isAnalyzing}
-              hideCliente={true}
-            />
+            <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Filtros</h2>
+                <Button variant="ghost" size="sm" onClick={() => setFiltersCollapsed(c => !c)}>
+                  {filtersCollapsed ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronUp className="h-4 w-4 mr-1" />}
+                  {filtersCollapsed ? 'Expandir' : 'Colapsar'}
+                </Button>
+              </div>
+              {!filtersCollapsed && (
+                <ParetoFilters 
+                  filterOptions={filterOptions}
+                  activeFilters={activeFilters}
+                  onFilterChange={setActiveFilters}
+                  onApplyFilters={handleApplyFilters}
+                  onClearFilters={handleClearFilters}
+                  isLoading={isAnalyzing}
+                  hideCliente={true}
+                />
+              )}
+            </div>
 
             {/* Métricas */}
             <ParetoProductsMetrics {...metrics} />
