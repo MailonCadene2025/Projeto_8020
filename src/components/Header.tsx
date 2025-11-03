@@ -24,7 +24,11 @@ export const Header: React.FC = () => {
       <div className="flex items-center justify-between">
         {/* Left: Logo + Title */}
         <div className="flex items-center gap-3">
-          <div className="bg-green-600 text-white px-3 py-1 rounded-lg font-bold text-base">TS</div>
+          <img
+            src="https://i.ibb.co/BpTtpvT/logo3.png"
+            alt="Logo Terris"
+            className="h-8 w-8 object-contain"
+          />
           <span className="text-slate-700 text-sm">Central de Inteligência Comercial - Terris</span>
         </div>
 

@@ -38,10 +38,12 @@ export const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
       <Card className="w-full max-w-md shadow-elevation">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-            <Lock className="h-6 w-6 text-primary" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Sistema Pareto 80/20</CardTitle>
+          <img
+            src="https://i.ibb.co/BpTtpvT/logo3.png"
+            alt="logo3"
+            className="mx-auto mb-4 h-12 w-12 object-contain"
+          />
+          <CardTitle className="text-2xl font-bold">Centrar de Inteligência</CardTitle>
           <p className="text-muted-foreground">Faça login para acessar o sistema</p>
         </CardHeader>
         <CardContent>
