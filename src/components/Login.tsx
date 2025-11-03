@@ -41,7 +41,7 @@ export const Login: React.FC = () => {
           <img
             src="https://i.ibb.co/BpTtpvT/logo3.png"
             alt="logo3"
-            className="mx-auto mb-4 h-12 w-12 object-contain"
+            className="mx-auto mb-4 h-36 w-36 object-contain"
           />
           <CardTitle className="text-2xl font-bold">Centrar de Inteligência</CardTitle>
           <p className="text-muted-foreground">Faça login para acessar o sistema</p>
