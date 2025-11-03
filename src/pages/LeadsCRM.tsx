@@ -216,8 +216,11 @@ const LeadsCRM: React.FC = () => {
   
   // CAC - Custo de Aquisição de Cliente (total investido / total convertido)
   const cac = convertidos > 0 ? valorInvestido / convertidos : 0;
+
+  // Receita Aproximada (total convertido × ticket médio)
+  const receitaAproximada = convertidos * ticketMedioProduto;
   
-  return { total, convertidos, perdidos, andamento, taxa, custoPorLead, ticketMedioProduto, valorInvestido, cac };
+  return { total, convertidos, perdidos, andamento, taxa, custoPorLead, ticketMedioProduto, valorInvestido, cac, receitaAproximada };
   }, [filteredData]);
 
   const vendedorOptions: ComboboxOption[] = [{ value: '', label: 'Todos' }, ...filterOptions.vendedores.map(v => ({ value: v, label: v }))];
@@ -304,12 +307,22 @@ const LeadsCRM: React.FC = () => {
               <div className="text-3xl font-bold" style={{ color: '#2563eb' }}>{formatCurrency(metrics.custoPorLead)}</div>
             </CardContent>
           </Card>
-          <Card className="rounded-xl shadow-sm border" style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
+          {/* Valor Investido - ocupa duas colunas */}
+          <Card className="rounded-xl shadow-sm border md:col-span-2" style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
             <CardHeader>
               <CardTitle className="text-sm" style={{ color: '#64748b' }}>Valor Investido</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" style={{ color: '#2563eb' }}>{formatCurrency(metrics.valorInvestido)}</div>
+            </CardContent>
+          </Card>
+          {/* Ticket Médio - coluna O */}
+          <Card className="rounded-xl shadow-sm border" style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
+            <CardHeader>
+              <CardTitle className="text-sm" style={{ color: '#64748b' }}>Ticket Médio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold" style={{ color: '#2563eb' }}>{formatCurrency(metrics.ticketMedioProduto)}</div>
             </CardContent>
           </Card>
           <Card className="rounded-xl shadow-sm border" style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
@@ -318,6 +331,15 @@ const LeadsCRM: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" style={{ color: '#8b5cf6' }}>{formatCurrency(metrics.cac)}</div>
+            </CardContent>
+          </Card>
+          {/* Receita Aproximada (convertidos × ticket médio) */}
+          <Card className="rounded-xl shadow-sm border md:col-span-2" style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
+            <CardHeader>
+              <CardTitle className="text-sm" style={{ color: '#64748b' }}>Receita Aproximada</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold" style={{ color: '#16a34a' }}>{formatCurrency(metrics.receitaAproximada)}</div>
             </CardContent>
           </Card>
         </div>

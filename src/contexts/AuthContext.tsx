@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
   username: string;
-  role: 'admin' | 'vendedor' | 'gerente';
+  role: 'admin' | 'vendedor' | 'gerente' | 'marketing';
   vendedor?: string;
 }
 
@@ -26,7 +26,9 @@ const users = [
   { username: 'Daniel', password: 'daniel@753', role: 'vendedor' as const, vendedor: 'DANIEL' },
   { username: 'Pedro', password: 'pedro@753', role: 'vendedor' as const, vendedor: 'PEDRO' },
   { username: 'Rocha', password: 'rocha@753', role: 'vendedor' as const, vendedor: 'ROCHA' },
-  { username: 'Pieri', password: 'pieri@753', role: 'vendedor' as const, vendedor: 'PIERI' }
+  { username: 'Pieri', password: 'pieri@753', role: 'vendedor' as const, vendedor: 'PIERI' },
+  // Usuário de marketing: acesso somente à página de Leads com privilégios de filtros
+  { username: 'marketing', password: 'marketing@753', role: 'marketing' as const }
 ];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

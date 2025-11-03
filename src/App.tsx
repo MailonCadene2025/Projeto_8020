@@ -14,6 +14,7 @@ import DemoComodatos from "./pages/DemoComodatos";
 import ParetoProdutos from "./pages/ParetoProdutos";
 import Index from "./pages/Index";
 import LeadsCRM from "./pages/LeadsCRM";
+import Unauthorized from "./pages/Unauthorized";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +30,7 @@ const App = () => (
             <Route 
               path="/" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin","gerente","vendedor"]}>
                   <Home />
                 </ProtectedRoute>
               } 
@@ -37,7 +38,7 @@ const App = () => (
             <Route 
               path="/pareto-produtos" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin","gerente","vendedor"]}>
                   <ParetoProdutos />
                 </ProtectedRoute>
               } 
@@ -45,7 +46,7 @@ const App = () => (
             <Route 
               path="/history" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin","gerente","vendedor"]}>
                   <History />
                 </ProtectedRoute>
               } 
@@ -53,7 +54,7 @@ const App = () => (
             <Route 
               path="/year-over-year" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin","gerente","vendedor"]}>
                   <YearOverYear />
                 </ProtectedRoute>
               } 
@@ -61,14 +62,14 @@ const App = () => (
             <Route 
               path="/demo-comodatos" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin","gerente","vendedor"]}>
                   <DemoComodatos />
                 </ProtectedRoute>
               } 
             />
             <Route path="/pareto-clientes" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin","gerente","vendedor"]}>
                   <Index />
                 </ProtectedRoute>
               } 
@@ -76,11 +77,12 @@ const App = () => (
             <Route 
               path="/leads" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin","gerente","vendedor","marketing"]}>
                   <LeadsCRM />
                 </ProtectedRoute>
               } 
             />
+            <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
