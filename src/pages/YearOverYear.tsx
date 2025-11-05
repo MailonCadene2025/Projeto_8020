@@ -85,13 +85,16 @@ const YearOverYear = () => {
           initialFilters.vendedor = user.vendedor;
         }
         
-        // Trava de regional para gerente (regional 3)
+        // Trava de regional para gerente (Rodrigo: Regional 4; outros: Regional 3)
         if (user && user.role === 'gerente') {
           const regionaisOpts = extractUnique(historyData, 'regional').sort();
-          const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
-          const regional3Value = regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-          if (regional3Value) {
-            initialFilters.regional = regional3Value;
+          const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+          const isRodrigo = user.username.toLowerCase() === 'rodrigo';
+          const regionalAlvo = isRodrigo
+            ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
+            : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+          if (regionalAlvo) {
+            initialFilters.regional = regionalAlvo;
           }
         }
 
@@ -217,13 +220,16 @@ const YearOverYear = () => {
       clearedFilters.vendedor = user.vendedor;
     }
     
-    // Manter trava de regional 3 para gerente
+    // Manter trava de regional para gerente (Rodrigo: Regional 4; outros: Regional 3)
     if (user && user.role === 'gerente') {
       const regionaisOpts = [...new Set(rawData.map(item => item.regional).filter(Boolean))] as string[];
-      const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
-      const regional3Value = regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      if (regional3Value) {
-        clearedFilters.regional = regional3Value;
+      const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+      const isRodrigo = user.username.toLowerCase() === 'rodrigo';
+      const regionalAlvo = isRodrigo
+        ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
+        : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+      if (regionalAlvo) {
+        clearedFilters.regional = regionalAlvo;
       }
     }
     
@@ -232,12 +238,13 @@ const YearOverYear = () => {
     const recomputed = processYearOverYearData(rawData, clearedFilters);
     setFilteredData(recomputed);
     
+    const isRodrigo = user?.username?.toLowerCase() === 'rodrigo';
     toast({
       title: "Filtros limpos",
       description: user?.role === 'vendedor' 
         ? "Filtros limpos. Filtro de vendedor mantido."
         : user?.role === 'gerente' 
-          ? "Filtros limpos. Regional 3 mantida."
+          ? isRodrigo ? "Filtros limpos. Regional 4 mantida." : "Filtros limpos. Regional 3 mantida."
           : "Mostrando todos os dados disponíveis.",
     });
   };

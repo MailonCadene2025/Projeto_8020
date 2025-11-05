@@ -73,11 +73,21 @@ const LeadsCRM: React.FC = () => {
         setFilterOptions({ vendedores: vendedoresOptions, status: statusValues, ufs: ufValues, produtos: produtoValues, equipes: equipeValues, empresas: empresaValues });
 
         // Aplicar filtro de vendedor automaticamente
-        let initialFilters: { vendedor?: string; status?: string; dataInicio?: string; dataFim?: string } = {};
+        let initialFilters: { vendedor?: string; status?: string; dataInicio?: string; dataFim?: string; equipe?: string } = {};
         let initialData = leads;
         if (user && user.role === 'vendedor' && user.vendedor) {
           initialFilters.vendedor = user.vendedor;
           initialData = leads.filter(l => l.vendedor === user.vendedor);
+        }
+
+        // Trava de equipe para o usuário Rodrigo
+        const isRodrigo = user?.username?.toLowerCase() === 'rodrigo';
+        if (isRodrigo) {
+          const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '').replace(/[\-/]/g, '');
+          const targetLabel = 'equiperodrigomsmtroac';
+          const equipeValor = equipeValues.find(e => normalize(e) === targetLabel) || 'Equipe Rodrigo - MS/MT/RO/AC';
+          initialFilters.equipe = equipeValor;
+          initialData = initialData.filter(l => l.equipe === equipeValor);
         }
 
         setData(leads);
@@ -151,15 +161,30 @@ const LeadsCRM: React.FC = () => {
     if (user && user.role === 'vendedor' && user.vendedor) {
       cleared.vendedor = user.vendedor;
     }
+    const isRodrigo = user?.username?.toLowerCase() === 'rodrigo';
+    if (isRodrigo) {
+      // Manter a equipe travada para Rodrigo
+      cleared.equipe = 'Equipe Rodrigo - MS/MT/RO/AC';
+    }
     setActiveFilters(cleared);
 
     let result = data;
     if (cleared.vendedor) {
       result = data.filter(l => l.vendedor === cleared.vendedor);
     }
+    if (cleared.equipe) {
+      result = result.filter(l => l.equipe === cleared.equipe);
+    }
     setFilteredData(result);
 
-    toast({ title: 'Filtros limpos', description: user?.role === 'vendedor' ? 'Filtro de vendedor mantido.' : 'Mostrando todos os leads.' });
+    toast({ 
+      title: 'Filtros limpos', 
+      description: user?.role === 'vendedor' 
+        ? 'Filtro de vendedor mantido.' 
+        : isRodrigo 
+          ? 'Filtros limpos. Equipe Rodrigo - MS/MT/RO/AC mantida.' 
+          : 'Mostrando todos os leads.' 
+    });
   };
 
   const handleSort = (key: keyof LeadData | 'valorUsado' | 'ticketMedio') => {
@@ -420,6 +445,7 @@ const LeadsCRM: React.FC = () => {
                     placeholder="Selecionar equipe"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
+                    disabled={user?.username?.toLowerCase() === 'rodrigo'}
                   />
                 </div>
                 <div>
