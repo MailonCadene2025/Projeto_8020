@@ -90,10 +90,10 @@ const Index = () => {
       
       // Aplicar filtro automático se for vendedor
       let filteredData = data;
-      let filtersToApply = {};
+      let filtersToApply: ActiveFilters = {};
       
       if (user && user.role === 'vendedor' && user.vendedor) {
-        filtersToApply = { vendedor: user.vendedor };
+        filtersToApply = { vendedor: [user.vendedor] };
         filteredData = GoogleSheetsService.filterData(data, filtersToApply);
         setActiveFilters(filtersToApply);
       }
@@ -111,7 +111,7 @@ const Index = () => {
             ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
             : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
         if (regionalAlvo) {
-          filtersToApply = { ...filtersToApply, regional: regionalAlvo };
+          filtersToApply = { ...filtersToApply, regional: [regionalAlvo] };
           filteredData = GoogleSheetsService.filterData(data, filtersToApply);
           setActiveFilters(filtersToApply);
         }
@@ -170,11 +170,11 @@ const Index = () => {
   // Clear all filters
   // Clear all filters
   const handleClearFilters = () => {
-    let clearedFilters = {};
+    let clearedFilters: ActiveFilters = {};
     
     // Se o usuário for vendedor, manter o filtro de vendedor
     if (user && user.role === 'vendedor' && user.vendedor) {
-      clearedFilters = { vendedor: user.vendedor };
+      clearedFilters = { vendedor: [user.vendedor] };
     }
 
     // Se o usuário for gerente, manter regional travada (Rodrigo: Regional 4; Sandro: Regional 1; outros: Regional 3)
@@ -190,10 +190,10 @@ const Index = () => {
           ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
           : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
       if (regionalAlvo) {
-        (clearedFilters as ActiveFilters).regional = regionalAlvo;
+        (clearedFilters as ActiveFilters).regional = [regionalAlvo];
       }
     }
-    
+
     setActiveFilters(clearedFilters);
     
     // Aplicar os filtros (se houver) aos dados
@@ -219,7 +219,7 @@ const Index = () => {
 
   // Perform Pareto analysis
   const performAnalysis = (data: SalesData[]) => {
-    const analysis = ParetoAnalysisService.performAnalysis(data, activeFilters);
+    const analysis = ParetoAnalysisService.performAnalysis(data);
     setParetoClients(analysis.clients);
     setMetrics(analysis.metrics);
     setChartData(analysis.chartData);
@@ -241,7 +241,7 @@ const Index = () => {
       // Filtrar automaticamente pelo vendedor logado
       const newFilters = {
         ...activeFilters,
-        vendedor: user.vendedor
+        vendedor: [user.vendedor]
       } as ActiveFilters;
       setActiveFilters(newFilters);
       
@@ -262,7 +262,7 @@ const Index = () => {
         : isSandro
           ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
           : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      const newFilters: ActiveFilters = regionalAlvo ? { ...activeFilters, regional: regionalAlvo } : { ...activeFilters };
+      const newFilters: ActiveFilters = regionalAlvo ? { ...activeFilters, regional: [regionalAlvo] } : { ...activeFilters };
       setActiveFilters(newFilters);
       const filtered = GoogleSheetsService.filterData(rawData, newFilters);
       setFilteredData(filtered);

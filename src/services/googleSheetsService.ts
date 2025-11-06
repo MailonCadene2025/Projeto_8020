@@ -282,13 +282,13 @@ export class GoogleSheetsService {
   static filterData(data: SalesData[], filters: {
     dataInicio?: string;
     dataFim?: string;
-    cliente?: string;
-    cidade?: string;
-    estado?: string;
-    categoria?: string;
-    vendedor?: string;
-    regional?: string;
-    tipoCliente?: string;
+    cliente?: string | string[];
+    cidade?: string | string[];
+    estado?: string | string[];
+    categoria?: string | string[];
+    vendedor?: string | string[];
+    regional?: string | string[];
+    tipoCliente?: string | string[];
   }): SalesData[] {
     return data.filter(item => {
       // Date filters
@@ -306,14 +306,20 @@ export class GoogleSheetsService {
         }
       }
 
-      // Text filters
-      if (filters.cliente && item.nomeFantasia !== filters.cliente) return false;
-      if (filters.cidade && item.cidade !== filters.cidade) return false;
-      if (filters.estado && item.uf !== filters.estado) return false;
-      if (filters.categoria && item.categoria !== filters.categoria) return false;
-      if (filters.vendedor && item.vendedor !== filters.vendedor) return false;
-      if (filters.regional && item.regional !== filters.regional) return false;
-      if (filters.tipoCliente && item.tipoCliente !== filters.tipoCliente) return false;
+      // Text filters (suporte a múltiplas opções)
+      const match = (filterVal: string | string[] | undefined, candidate: string) => {
+        if (!filterVal) return true
+        if (Array.isArray(filterVal)) return filterVal.length === 0 ? true : filterVal.includes(candidate)
+        return candidate === filterVal
+      }
+
+      if (!match(filters.cliente, item.nomeFantasia)) return false;
+      if (!match(filters.cidade, item.cidade)) return false;
+      if (!match(filters.estado, item.uf)) return false;
+      if (!match(filters.categoria, item.categoria)) return false;
+      if (!match(filters.vendedor, item.vendedor)) return false;
+      if (!match(filters.regional, item.regional)) return false;
+      if (!match(filters.tipoCliente, item.tipoCliente)) return false;
 
       return true;
     });

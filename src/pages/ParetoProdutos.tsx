@@ -84,7 +84,7 @@ const ParetoProdutos = () => {
       let filtersToApply: ActiveFilters = {};
 
       if (user && user.role === 'vendedor' && user.vendedor) {
-        filtersToApply = { vendedor: user.vendedor };
+        filtersToApply = { vendedor: [user.vendedor] };
         filteredData = GoogleSheetsService.filterData(data, filtersToApply);
         setActiveFilters(filtersToApply);
       }
@@ -102,7 +102,7 @@ const ParetoProdutos = () => {
             ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
             : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
         if (regionalAlvo) {
-          filtersToApply = { ...filtersToApply, regional: regionalAlvo };
+          filtersToApply = { ...filtersToApply, regional: [regionalAlvo] };
           filteredData = GoogleSheetsService.filterData(data, filtersToApply);
           setActiveFilters(filtersToApply);
         }
@@ -155,7 +155,7 @@ const ParetoProdutos = () => {
   const handleClearFilters = () => {
     let clearedFilters: ActiveFilters = {};
     if (user && user.role === 'vendedor' && user.vendedor) {
-      clearedFilters = { vendedor: user.vendedor };
+      clearedFilters = { vendedor: [user.vendedor] };
     }
 
     // Se o usuário for gerente, manter regional travada (Rodrigo: Regional 4; Sandro: Regional 1; outros: Regional 3)
@@ -171,7 +171,7 @@ const ParetoProdutos = () => {
           ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
           : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
       if (regionalAlvo) {
-        clearedFilters = { ...clearedFilters, regional: regionalAlvo };
+        clearedFilters = { ...clearedFilters, regional: [regionalAlvo] };
       }
     }
 
@@ -214,7 +214,7 @@ const ParetoProdutos = () => {
 
   useEffect(() => {
     if (user && user.role === 'vendedor' && user.vendedor && rawData.length > 0) {
-      const newFilters = { ...activeFilters, vendedor: user.vendedor };
+      const newFilters = { ...activeFilters, vendedor: [user.vendedor] };
       setActiveFilters(newFilters);
       const filtered = GoogleSheetsService.filterData(rawData, newFilters);
       setFilteredData(filtered);
@@ -230,7 +230,7 @@ const ParetoProdutos = () => {
         : isSandro
           ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
           : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      const newFilters: ActiveFilters = regionalAlvo ? { ...activeFilters, regional: regionalAlvo } : { ...activeFilters };
+      const newFilters: ActiveFilters = regionalAlvo ? { ...activeFilters, regional: [regionalAlvo] } : { ...activeFilters };
       setActiveFilters(newFilters);
       const filtered = GoogleSheetsService.filterData(rawData, newFilters);
       setFilteredData(filtered);

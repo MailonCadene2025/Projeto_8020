@@ -21,13 +21,13 @@ export interface FilterOptions {
 export interface ActiveFilters {
   dataInicio?: string;
   dataFim?: string;
-  cliente?: string;
-  cidade?: string;
-  estado?: string;
-  categoria?: string;
-  vendedor?: string;
-  regional?: string;
-  tipoCliente?: string;
+  cliente?: string[];
+  cidade?: string[];
+  estado?: string[];
+  categoria?: string[];
+  vendedor?: string[];
+  regional?: string[];
+  tipoCliente?: string[];
 }
 
 interface ParetoFiltersProps {
@@ -52,12 +52,17 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   
-  const updateFilter = (key: keyof ActiveFilters, value: string | undefined) => {
-    onFilterChange({ ...activeFilters, [key]: value });
+  const updateFilter = (key: keyof ActiveFilters, values: string[] | undefined) => {
+    onFilterChange({ ...activeFilters, [key]: values });
   };
 
   const getActiveFilterCount = () => {
-    return Object.values(activeFilters).filter(Boolean).length;
+    return Object.entries(activeFilters)
+      .filter(([key, val]) => {
+        if (key === 'dataInicio' || key === 'dataFim') return Boolean(val)
+        const arr = val as string[] | undefined
+        return Array.isArray(arr) && arr.length > 0
+      }).length;
   };
 
   const renderSelectField = (
@@ -72,12 +77,15 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
       ...options.map(opt => ({ value: opt, label: opt }))
     ];
 
+    const current = (activeFilters[key] as string[] | undefined) || []
+
     return (
       <div className="space-y-2">
         <Label className="text-sm font-medium">{label}</Label>
         <Combobox
-          value={activeFilters[key] || "__ALL__"}
-          onChange={(value) => updateFilter(key, value === "__ALL__" ? undefined : value)}
+          multiple
+          values={current}
+          onChangeValues={(vals) => updateFilter(key, vals && vals.length > 0 ? vals : undefined)}
           options={comboboxOptions}
           placeholder={placeholder}
           searchPlaceholder="Pesquisar..."
@@ -120,7 +128,7 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
               <Input
                 type="date"
                 value={activeFilters.dataInicio || ''}
-                onChange={(e) => updateFilter('dataInicio', e.target.value || undefined)}
+                onChange={(e) => updateFilter('dataInicio', e.target.value ? [e.target.value] : undefined)}
                 className="bg-background"
               />
             </div>
@@ -130,7 +138,8 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
               <Input
                 type="date"
                 value={activeFilters.dataFim || ''}
-                onChange={(e) => updateFilter('dataFim', e.target.value || undefined)}
+                onChange={(e) => updateFilter('dataFim', e.target.value ? [e.target.value] : undefined)}
+
                 className="bg-background"
               />
             </div>

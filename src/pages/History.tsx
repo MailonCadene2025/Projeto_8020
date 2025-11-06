@@ -11,7 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { ArrowLeft, ArrowUpDown, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+  import { ArrowLeft, ArrowUpDown, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+  import { ExportMenu } from '@/components/ExportMenu';
+  import type { ExportColumn } from '@/utils/export';
 
 const API_KEY = 'AIzaSyCd7d1FcI_61TgM_WB6G4T9ao7BkHT45J8';
 const SHEET_ID = '1p7cRvyWsNQmZRrvWPKU2Wxx380jzqxMKhmgmsvTZ0u8';
@@ -105,7 +107,7 @@ const History = () => {
         
         // Filtro automático para vendedor
         if (user && user.role === 'vendedor' && user.vendedor) {
-          initialFilters.vendedor = user.vendedor;
+          initialFilters.vendedor = [user.vendedor];
           initialFilteredData = initialFilteredData.filter(item => item.vendedor === user.vendedor);
         }
 
@@ -122,7 +124,7 @@ const History = () => {
               ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
               : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
           if (regionalAlvo) {
-            initialFilters.regional = regionalAlvo;
+            initialFilters.regional = [regionalAlvo];
             initialFilteredData = initialFilteredData.filter(item => item.regional === regionalAlvo);
           }
         }
@@ -151,6 +153,10 @@ const History = () => {
   }, [user, prefilledClient, toast]);
 
   const handleApplyFilters = () => {
+    const match = (filterVal: string[] | undefined, candidate: string) => {
+      if (!filterVal) return true
+      return filterVal.length === 0 ? true : filterVal.includes(candidate)
+    }
     let filtered = data.filter(item => {
       if (!item.dataPedido) return false; // Ignore entries with no date
       const itemDate = new Date(item.dataPedido.split('/').reverse().join('-'));
@@ -168,12 +174,12 @@ const History = () => {
         if (itemDate > endDate) return false;
       }
 
-      if (activeFilters.cliente && item.nomeFantasia !== activeFilters.cliente) return false;
-      if (activeFilters.categoria && item.categoria !== activeFilters.categoria) return false;
-      if (activeFilters.regional && item.regional !== activeFilters.regional) return false;
-      if (activeFilters.estado && item.uf !== activeFilters.estado) return false;
-      if (activeFilters.cidade && item.cidade !== activeFilters.cidade) return false;
-      if (activeFilters.vendedor && item.vendedor !== activeFilters.vendedor) return false;
+      if (!match(activeFilters.cliente, item.nomeFantasia)) return false;
+      if (!match(activeFilters.categoria, item.categoria)) return false;
+      if (!match(activeFilters.regional, item.regional)) return false;
+      if (!match(activeFilters.estado, item.uf)) return false;
+      if (!match(activeFilters.cidade, item.cidade)) return false;
+      if (!match(activeFilters.vendedor, item.vendedor)) return false;
       return true;
     });
     setFilteredData(filtered);
@@ -184,7 +190,7 @@ const History = () => {
     
     // Se o usuário for vendedor, manter o filtro de vendedor
     if (user && user.role === 'vendedor' && user.vendedor) {
-      clearedFilters = { vendedor: user.vendedor };
+      clearedFilters = { vendedor: [ user.vendedor ] };
     }
     
     // Se o usuário for gerente, manter regional travada (Rodrigo: Regional 4; outros: Regional 3)
@@ -200,7 +206,7 @@ const History = () => {
           ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
           : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
       if (regionalAlvo) {
-        (clearedFilters as ActiveHistoryFilters).regional = regionalAlvo;
+        (clearedFilters as ActiveHistoryFilters).regional = [ regionalAlvo ];
       }
     }
     
@@ -209,9 +215,10 @@ const History = () => {
     // Aplicar os filtros (se houver) aos dados
     let dataToShow = data;
     if (Object.keys(clearedFilters).length > 0) {
+      const cf = clearedFilters as ActiveHistoryFilters
       dataToShow = data.filter(item => {
-        if ('vendedor' in (clearedFilters as { vendedor?: string }) && item.vendedor !== (clearedFilters as { vendedor?: string }).vendedor) return false;
-        if ('regional' in (clearedFilters as { regional?: string }) && item.regional !== (clearedFilters as { regional?: string }).regional) return false;
+        if (cf.vendedor && cf.vendedor.length > 0 && !cf.vendedor.includes(item.vendedor)) return false;
+        if (cf.regional && cf.regional.length > 0 && !cf.regional.includes(item.regional)) return false;
         return true;
       });
     }
@@ -351,6 +358,25 @@ const History = () => {
           <p>Carregando...</p>
         ) : (
           <>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-muted-foreground">Registros: {sortedData.length}</div>
+            <ExportMenu
+              data={sortedData}
+              fileBaseName="historico-vendas"
+              columns={[
+                { label: 'Data Pedido', value: (i) => i.dataPedido },
+                { label: 'Nome Fantasia', value: (i) => i.nomeFantasia },
+                { label: 'UF', value: (i) => i.uf },
+                { label: 'Categoria', value: (i) => i.categoria },
+                { label: 'Forma de Pagamento', value: (i) => i.formaPagamento },
+                { label: 'NF', value: (i) => i.nf },
+                { label: 'Vendedor', value: (i) => i.vendedor },
+                { label: 'Quantidade', value: (i) => i.quantidade },
+                { label: 'Valor Unitário', value: (i) => ((i.quantidade ? i.valor / i.quantidade : 0).toFixed(2)) },
+                { label: 'Valor', value: (i) => i.valor.toFixed(2) },
+              ] as ExportColumn<typeof sortedData[number]>[]}
+            />
+          </div>
           <Table>
             <TableHeader>
               <TableRow>

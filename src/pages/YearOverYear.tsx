@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { ExportMenu } from '@/components/ExportMenu';
+import type { ExportColumn } from '@/utils/export';
 
 const API_KEY = 'AIzaSyCd7d1FcI_61TgM_WB6G4T9ao7BkHT45J8';
 const SHEET_ID = '1p7cRvyWsNQmZRrvWPKU2Wxx380jzqxMKhmgmsvTZ0u8';
@@ -82,7 +84,7 @@ const YearOverYear = () => {
         let initialFilters: ActiveYearOverYearFilters = {};
         
         if (user && user.role === 'vendedor' && user.vendedor) {
-          initialFilters.vendedor = user.vendedor;
+          initialFilters.vendedor = [user.vendedor];
         }
         
         // Trava de regional para gerente (Rodrigo: Regional 4; Sandro: Regional 1; outros: Regional 3)
@@ -98,7 +100,7 @@ const YearOverYear = () => {
               ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
               : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
           if (regionalAlvo) {
-            initialFilters.regional = regionalAlvo;
+            initialFilters.regional = [regionalAlvo];
           }
         }
 
@@ -122,6 +124,11 @@ const YearOverYear = () => {
 
   const processYearOverYearData = (historyData: HistoryData[], filters?: ActiveYearOverYearFilters): YearOverYearData[] => {
     const clientMap = new Map<string, YearOverYearData>();
+    const match = (vals?: string[], candidate?: string) => {
+      if (!vals) return true;
+      if (!candidate) return false;
+      return vals.length === 0 ? true : vals.includes(candidate);
+    };
     const source = filters ? historyData.filter(item => {
       if (!item.dataPedido || !item.nomeFantasia) return false;
 
@@ -140,12 +147,12 @@ const YearOverYear = () => {
         if (itemDate > end) return false;
       }
 
-      if (filters.cliente && item.nomeFantasia !== filters.cliente) return false;
-      if (filters.categoria && item.categoria !== filters.categoria) return false;
-      if (filters.regional && item.regional !== filters.regional) return false;
-      if (filters.estado && item.uf !== filters.estado) return false;
-      if (filters.cidade && item.cidade !== filters.cidade) return false;
-      if (filters.vendedor && item.vendedor !== filters.vendedor) return false;
+      if (!match(filters.cliente, item.nomeFantasia)) return false;
+      if (!match(filters.categoria, item.categoria)) return false;
+      if (!match(filters.regional, item.regional)) return false;
+      if (!match(filters.estado, item.uf)) return false;
+      if (!match(filters.cidade, item.cidade)) return false;
+      if (!match(filters.vendedor, item.vendedor)) return false;
 
       return true;
     }) : historyData;
@@ -221,7 +228,7 @@ const YearOverYear = () => {
     let clearedFilters: ActiveYearOverYearFilters = {};
     
     if (user && user.role === 'vendedor' && user.vendedor) {
-      clearedFilters.vendedor = user.vendedor;
+      clearedFilters.vendedor = [user.vendedor];
     }
     
     // Manter trava de regional para gerente (Rodrigo: Regional 4; Sandro: Regional 1; outros: Regional 3)
@@ -237,7 +244,7 @@ const YearOverYear = () => {
           ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
           : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
       if (regionalAlvo) {
-        clearedFilters.regional = regionalAlvo;
+        clearedFilters.regional = [regionalAlvo];
       }
     }
     
@@ -395,6 +402,24 @@ const YearOverYear = () => {
         {isLoading ? (
           <p>Carregando...</p>
         ) : (
+          <>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-muted-foreground">Registros: {sortedData.length}</div>
+            <ExportMenu
+              data={sortedData}
+              fileBaseName="year-over-year"
+              columns={[
+                { label: 'Revenda', value: (i) => i.nomeFantasia },
+                { label: 'Quantidade 2024', value: (i) => i.totalItens2024 },
+                { label: 'Valor unitário 2024', value: (i) => i.valorUnitario2024.toFixed(2) },
+                { label: 'Faturamento 2024', value: (i) => i.faturamento2024.toFixed(2) },
+                { label: 'Quantidade 2025', value: (i) => i.totalItens2025 },
+                { label: 'Valor unitário 2025', value: (i) => i.valorUnitario2025.toFixed(2) },
+                { label: 'Faturamento 2025', value: (i) => i.faturamento2025.toFixed(2) },
+                { label: 'Crescimento %', value: (i) => i.crescimentoPercentual.toFixed(1) },
+              ] as ExportColumn<typeof sortedData[number]>[]}
+            />
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -492,6 +517,7 @@ const YearOverYear = () => {
               ))}
             </TableBody>
           </Table>
+          </>
         )}
       </div>
     </div>

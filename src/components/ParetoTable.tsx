@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ChevronLeft, ChevronRight, Search, Trophy, AlertTriangle } from 'lucide-react';
+import { ExportMenu } from '@/components/ExportMenu';
+import type { ExportColumn } from '@/utils/export';
 
 export interface ParetoClient {
   nomeFantasia: string;
@@ -102,6 +104,25 @@ export const ParetoTable: React.FC<ParetoTableProps> = ({ data }) => {
                 className="pl-10"
               />
             </div>
+            {/* Export */}
+            <ExportMenu
+              data={filteredData}
+              fileBaseName="pareto-clientes"
+              columns={[
+                { label: 'Cliente', value: (c) => c.nomeFantasia },
+                { label: 'Cidade', value: (c) => c.cidade },
+                { label: 'UF', value: (c) => c.uf },
+                { label: 'Vendedor Principal', value: (c) => c.vendedorPrincipal },
+                { label: 'Categoria Principal', value: (c) => c.categoriaPrincipal },
+                { label: 'Vendas Totais', value: (c) => c.vendasTotais.toFixed(2) },
+                { label: '% Individual', value: (c) => c.percentualIndividual.toFixed(2) },
+                { label: '% Acumulado', value: (c) => c.percentualAcumulado.toFixed(2) },
+                { label: 'Classificação', value: (c) => (c.classificacao === 'TOP_20' ? 'TOP 20%' : 'Demais 80%') },
+                { label: 'Último Pedido', value: (c) => c.ultimoPedido },
+                { label: 'Total Pedidos', value: (c) => c.totalPedidos },
+                { label: 'Total Itens', value: (c) => c.totalItens },
+              ] as ExportColumn<ParetoClient>[]}
+            />
           </div>
         </div>
       </CardHeader>

@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { GoogleSheetsService, LeadData } from '@/services/googleSheetsService';
 import { ArrowLeft, ArrowUpDown, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { ExportMenu } from '@/components/ExportMenu';
+import type { ExportColumn } from '@/utils/export';
 
 const API_KEY = 'AIzaSyCd7d1FcI_61TgM_WB6G4T9ao7BkHT45J8';
 const SHEET_ID = '1p7cRvyWsNQmZRrvWPKU2Wxx380jzqxMKhmgmsvTZ0u8';
@@ -44,7 +46,7 @@ const LeadsCRM: React.FC = () => {
   const itemsPerPage = 10;
 
   const [filterOptions, setFilterOptions] = useState<{ vendedores: string[]; status: string[]; ufs: string[]; produtos: string[]; equipes: string[]; empresas: string[] }>({ vendedores: [], status: [], ufs: [], produtos: [], equipes: [], empresas: [] });
-  const [activeFilters, setActiveFilters] = useState<{ dataInicio?: string; dataFim?: string; vendedor?: string; status?: string; uf?: string; produto?: string; equipe?: string; empresa?: string }>({});
+  const [activeFilters, setActiveFilters] = useState<{ dataInicio?: string; dataFim?: string; vendedor?: string[]; status?: string[]; uf?: string[]; produto?: string[]; equipe?: string[]; empresa?: string[] }>({});
   const [filtersCollapsed, setFiltersCollapsed] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -112,7 +114,12 @@ const LeadsCRM: React.FC = () => {
 
         setData(leads);
         setFilteredData(initialData);
-        setActiveFilters(initialFilters);
+        setActiveFilters({
+          ...initialFilters,
+          vendedor: initialFilters.vendedor ? [initialFilters.vendedor] : undefined,
+          status: initialFilters.status ? [initialFilters.status] : undefined,
+          equipe: initialFilters.equipe ? [initialFilters.equipe] : undefined,
+        });
         setIsLoading(false);
         toast({ title: 'Dados carregados', description: `${initialData.length} leads carregados com sucesso.` });
       } catch (error) {
@@ -130,21 +137,26 @@ const LeadsCRM: React.FC = () => {
   }, [searchTerm, activeFilters, filteredData.length]);
 
   const applyFilters = () => {
+    const match = (vals?: string[], candidate?: string) => {
+      if (!vals) return true;
+      if (!candidate) return false;
+      return vals.length === 0 ? true : vals.includes(candidate);
+    };
     let result = data.filter(lead => {
       // Filtro por vendedor
-      if (activeFilters.vendedor && lead.vendedor !== activeFilters.vendedor) return false;
+      if (!match(activeFilters.vendedor, lead.vendedor)) return false;
 
       // Filtro por status
       if (activeFilters.status) {
         const s = getLeadStatus(lead).status;
-        if (s !== activeFilters.status) return false;
+        if (!match(activeFilters.status, s)) return false;
       }
 
       // Novos filtros: UF, Produto, Equipe, Empresa
-      if (activeFilters.uf && lead.uf !== activeFilters.uf) return false;
-      if (activeFilters.produto && lead.produto !== activeFilters.produto) return false;
-      if (activeFilters.equipe && lead.equipe !== activeFilters.equipe) return false;
-      if (activeFilters.empresa && lead.empresa !== activeFilters.empresa) return false;
+      if (!match(activeFilters.uf, lead.uf)) return false;
+      if (!match(activeFilters.produto, lead.produto)) return false;
+      if (!match(activeFilters.equipe, lead.equipe)) return false;
+      if (!match(activeFilters.empresa, lead.empresa)) return false;
 
       // Filtro por data (dataCriacao pode estar em DD/MM/YYYY)
       if (activeFilters.dataInicio || activeFilters.dataFim) {
@@ -177,33 +189,33 @@ const LeadsCRM: React.FC = () => {
   };
 
   const clearFilters = () => {
-    let cleared: { dataInicio?: string; dataFim?: string; vendedor?: string; status?: string; uf?: string; produto?: string; equipe?: string; empresa?: string } = {};
+    let cleared: { dataInicio?: string; dataFim?: string; vendedor?: string[]; status?: string[]; uf?: string[]; produto?: string[]; equipe?: string[]; empresa?: string[] } = {};
     if (user && user.role === 'vendedor' && user.vendedor) {
-      cleared.vendedor = user.vendedor;
+      cleared.vendedor = [user.vendedor];
     }
     const isRodrigo = user?.username?.toLowerCase() === 'rodrigo';
     if (isRodrigo) {
       // Manter a equipe travada para Rodrigo
-      cleared.equipe = 'Equipe Rodrigo - MS/MT/RO/AC';
+      cleared.equipe = ['Equipe Rodrigo - MS/MT/RO/AC'];
     }
     const isSandro = user?.username?.toLowerCase() === 'sandro';
     if (isSandro) {
       // Manter a equipe travada para Sandro
-      cleared.equipe = 'Equipe Sandro - Sul';
+      cleared.equipe = ['Equipe Sandro - Sul'];
     }
     const isJoao = user?.username?.toLowerCase() === 'joao';
     if (isJoao) {
       // Manter a equipe travada para joao
-      cleared.equipe = 'Equipe Paulo - MG/GO/TO/BA';
+      cleared.equipe = ['Equipe Paulo - MG/GO/TO/BA'];
     }
     setActiveFilters(cleared);
 
     let result = data;
-    if (cleared.vendedor) {
-      result = data.filter(l => l.vendedor === cleared.vendedor);
+    if (cleared.vendedor && cleared.vendedor.length > 0) {
+      result = data.filter(l => cleared.vendedor!.includes(l.vendedor));
     }
-    if (cleared.equipe) {
-      result = result.filter(l => l.equipe === cleared.equipe);
+    if (cleared.equipe && cleared.equipe.length > 0) {
+      result = result.filter(l => cleared.equipe!.includes(l.equipe));
     }
     setFilteredData(result);
 
@@ -282,12 +294,12 @@ const LeadsCRM: React.FC = () => {
   return { total, convertidos, perdidos, andamento, taxa, custoPorLead, ticketMedioProduto, valorInvestido, cac, receitaAproximada };
   }, [filteredData]);
 
-  const vendedorOptions: ComboboxOption[] = [{ value: '', label: 'Todos' }, ...filterOptions.vendedores.map(v => ({ value: v, label: v }))];
-  const statusOptions: ComboboxOption[] = [{ value: '', label: 'Todos' }, ...filterOptions.status.map(s => ({ value: s, label: s }))];
-  const ufOptions: ComboboxOption[] = [{ value: '', label: 'Todos' }, ...filterOptions.ufs.map(u => ({ value: u, label: u }))];
-  const produtoOptions: ComboboxOption[] = [{ value: '', label: 'Todos' }, ...filterOptions.produtos.map(p => ({ value: p, label: p }))];
-  const equipeOptions: ComboboxOption[] = [{ value: '', label: 'Todos' }, ...filterOptions.equipes.map(e => ({ value: e, label: e }))];
-  const empresaOptions: ComboboxOption[] = [{ value: '', label: 'Todos' }, ...filterOptions.empresas.map(e => ({ value: e, label: e }))];
+  const vendedorOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.vendedores.map(v => ({ value: v, label: v }))];
+  const statusOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.status.map(s => ({ value: s, label: s }))];
+  const ufOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.ufs.map(u => ({ value: u, label: u }))];
+  const produtoOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.produtos.map(p => ({ value: p, label: p }))];
+  const equipeOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.equipes.map(e => ({ value: e, label: e }))];
+  const empresaOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.empresas.map(e => ({ value: e, label: e }))];
 
   const paginated = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -426,9 +438,10 @@ const LeadsCRM: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Vendedor</label>
                   <Combobox
+                    multiple
                     options={vendedorOptions}
-                    value={activeFilters.vendedor || ''}
-                    onChange={(value) => setActiveFilters({ ...activeFilters, vendedor: value })}
+                    values={activeFilters.vendedor || []}
+                    onChangeValues={(values) => setActiveFilters({ ...activeFilters, vendedor: values && values.length > 0 ? values : undefined })}
                     placeholder="Selecionar vendedor"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
@@ -438,9 +451,10 @@ const LeadsCRM: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Status</label>
                   <Combobox
+                    multiple
                     options={statusOptions}
-                    value={activeFilters.status || ''}
-                    onChange={(value) => setActiveFilters({ ...activeFilters, status: value })}
+                    values={activeFilters.status || []}
+                    onChangeValues={(values) => setActiveFilters({ ...activeFilters, status: values && values.length > 0 ? values : undefined })}
                     placeholder="Selecionar status"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
@@ -451,9 +465,10 @@ const LeadsCRM: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>UF</label>
                   <Combobox
+                    multiple
                     options={ufOptions}
-                    value={activeFilters.uf || ''}
-                    onChange={(value) => setActiveFilters({ ...activeFilters, uf: value })}
+                    values={activeFilters.uf || []}
+                    onChangeValues={(values) => setActiveFilters({ ...activeFilters, uf: values && values.length > 0 ? values : undefined })}
                     placeholder="Selecionar UF"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
@@ -462,9 +477,10 @@ const LeadsCRM: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Produto</label>
                   <Combobox
+                    multiple
                     options={produtoOptions}
-                    value={activeFilters.produto || ''}
-                    onChange={(value) => setActiveFilters({ ...activeFilters, produto: value })}
+                    values={activeFilters.produto || []}
+                    onChangeValues={(values) => setActiveFilters({ ...activeFilters, produto: values && values.length > 0 ? values : undefined })}
                     placeholder="Selecionar produto"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
@@ -473,9 +489,10 @@ const LeadsCRM: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Equipes</label>
                   <Combobox
+                    multiple
                     options={equipeOptions}
-                    value={activeFilters.equipe || ''}
-                    onChange={(value) => setActiveFilters({ ...activeFilters, equipe: value })}
+                    values={activeFilters.equipe || []}
+                    onChangeValues={(values) => setActiveFilters({ ...activeFilters, equipe: values && values.length > 0 ? values : undefined })}
                     placeholder="Selecionar equipe"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
@@ -485,9 +502,10 @@ const LeadsCRM: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Empresa</label>
                   <Combobox
+                    multiple
                     options={empresaOptions}
-                    value={activeFilters.empresa || ''}
-                    onChange={(value) => setActiveFilters({ ...activeFilters, empresa: value })}
+                    values={activeFilters.empresa || []}
+                    onChangeValues={(values) => setActiveFilters({ ...activeFilters, empresa: values && values.length > 0 ? values : undefined })}
                     placeholder="Selecionar empresa"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
@@ -510,7 +528,32 @@ const LeadsCRM: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border" style={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}>
           <div className="p-4 flex items-center justify-between border-b">
             <h2 className="text-lg font-semibold" style={{ color: '#1e293b' }}>Leads</h2>
-            <div className="text-sm" style={{ color: '#64748b' }}>Total: {filteredData.length}</div>
+            <div className="flex items-center gap-3">
+              <div className="text-sm" style={{ color: '#64748b' }}>Total: {filteredData.length}</div>
+              <ExportMenu
+                data={filteredData}
+                fileBaseName="leads-crm"
+                columns={[
+                  { label: 'Nome', value: (l) => l.nome },
+                  { label: 'Produto', value: (l) => l.produto },
+                  { label: 'Empresa', value: (l) => l.empresa },
+                  { label: 'Vendedor', value: (l) => l.vendedor },
+                  { label: 'Etapa do Funil', value: (l) => l.etapaFunil },
+                  { label: 'Status', value: (l) => l.estadoNegociacao },
+                  { label: 'Ticket Médio', value: (l) => (l.ticketMedio || 0).toFixed(2) },
+                  { label: 'Custo', value: (l) => (l.valorUsado || 0).toFixed(2) },
+                  { label: 'Data', value: (l) => l.dataCriacao },
+                  { label: 'UF', value: (l) => l.uf },
+                  { label: 'Cidade', value: (l) => l.cidade },
+                  { label: 'Fonte', value: (l) => l.fonte },
+                  { label: 'Campanha', value: (l) => l.campanha },
+                  { label: 'Valor Campanha', value: (l) => (l.valorCampanha || 0).toFixed(2) },
+                  { label: 'Valor Usado', value: (l) => (l.valorUsado || 0).toFixed(2) },
+                  { label: 'Qualificação', value: (l) => l.qualificacao },
+                  { label: 'Anotações', value: (l) => l.anotacoes || '' },
+                ] as ExportColumn<LeadData>[]}
+              />
+            </div>
           </div>
 
           {isLoading ? (

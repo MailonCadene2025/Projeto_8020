@@ -16,12 +16,12 @@ export interface FilterOptions {
 }
 
 export interface ActiveFilters {
-  cliente?: string;
-  cidade?: string;
-  estado?: string;
-  categoria?: string;
-  vendedor?: string;
-  regional?: string;
+  cliente?: string[];
+  cidade?: string[];
+  estado?: string[];
+  categoria?: string[];
+  vendedor?: string[];
+  regional?: string[];
 }
 
 interface YearOverYearFiltersProps {
@@ -43,8 +43,8 @@ export const YearOverYearFilters: React.FC<YearOverYearFiltersProps> = ({
 }) => {
   const { user } = useAuth();
 
-  const updateFilter = (key: keyof ActiveFilters, value: string | undefined) => {
-    onFilterChange({ ...activeFilters, [key]: value });
+  const updateFilter = (key: keyof ActiveFilters, values: string[] | undefined) => {
+    onFilterChange({ ...activeFilters, [key]: values });
   };
 
   const renderSelectField = (
@@ -59,12 +59,15 @@ export const YearOverYearFilters: React.FC<YearOverYearFiltersProps> = ({
       ...options.map(opt => ({ value: opt, label: opt }))
     ];
 
+    const current = (activeFilters[key] as string[] | undefined) || []
+
     return (
       <div className="space-y-2">
         <Label className="text-sm font-medium">{label}</Label>
         <Combobox
-          value={activeFilters[key] || "__ALL__"}
-          onChange={(value) => updateFilter(key, value === "__ALL__" ? undefined : value)}
+          multiple
+          values={current}
+          onChangeValues={(vals) => updateFilter(key, vals && vals.length > 0 ? vals : undefined)}
           options={comboboxOptions}
           placeholder={placeholder}
           searchPlaceholder="Pesquisar..."
