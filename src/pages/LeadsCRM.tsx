@@ -100,6 +100,16 @@ const LeadsCRM: React.FC = () => {
           initialData = initialData.filter(l => l.equipe === equipeValorSandro);
         }
 
+        // Trava de equipe para o usuário joao
+        const isJoao = user?.username?.toLowerCase() === 'joao';
+        if (isJoao) {
+          const normalize3 = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '').replace(/[\-/]/g, '');
+          const targetLabelJoao = 'equipepaulomggotoba';
+          const equipeValorJoao = equipeValues.find(e => normalize3(e) === targetLabelJoao) || 'Equipe Paulo - MG/GO/TO/BA';
+          initialFilters.equipe = equipeValorJoao;
+          initialData = initialData.filter(l => l.equipe === equipeValorJoao);
+        }
+
         setData(leads);
         setFilteredData(initialData);
         setActiveFilters(initialFilters);
@@ -181,6 +191,11 @@ const LeadsCRM: React.FC = () => {
       // Manter a equipe travada para Sandro
       cleared.equipe = 'Equipe Sandro - Sul';
     }
+    const isJoao = user?.username?.toLowerCase() === 'joao';
+    if (isJoao) {
+      // Manter a equipe travada para joao
+      cleared.equipe = 'Equipe Paulo - MG/GO/TO/BA';
+    }
     setActiveFilters(cleared);
 
     let result = data;
@@ -200,7 +215,9 @@ const LeadsCRM: React.FC = () => {
           ? 'Filtros limpos. Equipe Rodrigo - MS/MT/RO/AC mantida.' 
           : isSandro
             ? 'Filtros limpos. Equipe Sandro - Sul mantida.'
-            : 'Mostrando todos os leads.' 
+            : isJoao
+              ? 'Filtros limpos. Equipe Paulo - MG/GO/TO/BA mantida.'
+              : 'Mostrando todos os leads.' 
     });
   };
 
@@ -462,7 +479,7 @@ const LeadsCRM: React.FC = () => {
                     placeholder="Selecionar equipe"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
-                    disabled={['rodrigo','sandro'].includes(user?.username?.toLowerCase() || '')}
+                    disabled={['rodrigo','sandro','joao'].includes(user?.username?.toLowerCase() || '')}
                   />
                 </div>
                 <div>

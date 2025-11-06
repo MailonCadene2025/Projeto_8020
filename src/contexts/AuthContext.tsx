@@ -17,7 +17,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const users = [
   { username: 'admin', password: 'admin@951', role: 'admin' as const },
-  { username: 'João', password: 'joao@753', role: 'gerente' as const },
+  { username: 'João', password: 'joao@951', role: 'gerente' as const },
+  // Usuário joao (sem acento) com nova senha e papel de gerente
+  { username: 'joao', password: 'joao@951', role: 'gerente' as const },
   { username: 'Nara', password: 'Nara@753', role: 'vendedor' as const, vendedor: 'NARA' },
   { username: 'Matheus', password: 'matheus@753', role: 'vendedor' as const, vendedor: 'MATHEUS' },
   { username: 'Luiz', password: 'luiz@753', role: 'vendedor' as const, vendedor: 'LUIZ' },
