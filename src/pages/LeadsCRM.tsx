@@ -90,6 +90,16 @@ const LeadsCRM: React.FC = () => {
           initialData = initialData.filter(l => l.equipe === equipeValor);
         }
 
+        // Trava de equipe para o usuário Sandro
+        const isSandro = user?.username?.toLowerCase() === 'sandro';
+        if (isSandro) {
+          const normalize2 = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '').replace(/[\-/]/g, '');
+          const targetLabelSandro = 'equipesandrosul';
+          const equipeValorSandro = equipeValues.find(e => normalize2(e) === targetLabelSandro) || 'Equipe Sandro - Sul';
+          initialFilters.equipe = equipeValorSandro;
+          initialData = initialData.filter(l => l.equipe === equipeValorSandro);
+        }
+
         setData(leads);
         setFilteredData(initialData);
         setActiveFilters(initialFilters);
@@ -166,6 +176,11 @@ const LeadsCRM: React.FC = () => {
       // Manter a equipe travada para Rodrigo
       cleared.equipe = 'Equipe Rodrigo - MS/MT/RO/AC';
     }
+    const isSandro = user?.username?.toLowerCase() === 'sandro';
+    if (isSandro) {
+      // Manter a equipe travada para Sandro
+      cleared.equipe = 'Equipe Sandro - Sul';
+    }
     setActiveFilters(cleared);
 
     let result = data;
@@ -183,7 +198,9 @@ const LeadsCRM: React.FC = () => {
         ? 'Filtro de vendedor mantido.' 
         : isRodrigo 
           ? 'Filtros limpos. Equipe Rodrigo - MS/MT/RO/AC mantida.' 
-          : 'Mostrando todos os leads.' 
+          : isSandro
+            ? 'Filtros limpos. Equipe Sandro - Sul mantida.'
+            : 'Mostrando todos os leads.' 
     });
   };
 
@@ -445,7 +462,7 @@ const LeadsCRM: React.FC = () => {
                     placeholder="Selecionar equipe"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
-                    disabled={user?.username?.toLowerCase() === 'rodrigo'}
+                    disabled={['rodrigo','sandro'].includes(user?.username?.toLowerCase() || '')}
                   />
                 </div>
                 <div>

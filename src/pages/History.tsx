@@ -113,10 +113,14 @@ const History = () => {
         if (user && user.role === 'gerente') {
           const regionaisOpts = extractUnique(historyData, 'regional').sort();
           const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-          const isRodrigo = user.username.toLowerCase() === 'rodrigo';
+          const un = user.username.toLowerCase();
+          const isRodrigo = un === 'rodrigo';
+          const isSandro = un === 'sandro';
           const regionalAlvo = isRodrigo
             ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-            : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+            : isSandro
+              ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
+              : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
           if (regionalAlvo) {
             initialFilters.regional = regionalAlvo;
             initialFilteredData = initialFilteredData.filter(item => item.regional === regionalAlvo);
@@ -187,10 +191,14 @@ const History = () => {
     if (user && user.role === 'gerente') {
       const regionaisOpts = [...new Set(data.map(item => item.regional).filter(Boolean))] as string[];
       const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-      const isRodrigo = user.username.toLowerCase() === 'rodrigo';
+      const un = user.username.toLowerCase();
+      const isRodrigo = un === 'rodrigo';
+      const isSandro = un === 'sandro';
       const regionalAlvo = isRodrigo
         ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-        : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+        : isSandro
+          ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
+          : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
       if (regionalAlvo) {
         (clearedFilters as ActiveHistoryFilters).regional = regionalAlvo;
       }
@@ -211,12 +219,13 @@ const History = () => {
     setFilteredData(dataToShow);
     
     const isRodrigo = user?.username?.toLowerCase() === 'rodrigo';
+    const isSandro = user?.username?.toLowerCase() === 'sandro';
     toast({
       title: "Filtros limpos",
       description: user?.role === 'vendedor' 
         ? "Filtros limpos. Filtro de vendedor mantido."
         : user?.role === 'gerente' 
-          ? isRodrigo ? "Filtros limpos. Regional 4 mantida." : "Filtros limpos. Regional 3 mantida."
+          ? (isRodrigo ? "Filtros limpos. Regional 4 mantida." : (isSandro ? "Filtros limpos. Regional 1 mantida." : "Filtros limpos. Regional 3 mantida."))
           : "Mostrando todos os dados disponíveis.",
     });
   };

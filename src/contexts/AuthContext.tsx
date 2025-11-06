@@ -29,6 +29,8 @@ const users = [
   { username: 'Pieri', password: 'pieri@753', role: 'vendedor' as const, vendedor: 'PIERI' },
   // Usuário específico com travas de filtros personalizadas
   { username: 'Rodrigo', password: 'rodrigo@951', role: 'gerente' as const },
+  // Usuário específico Sandro com travas personalizadas
+  { username: 'Sandro', password: 'sandro@951', role: 'gerente' as const },
   // Usuário de marketing: acesso somente à página de Leads com privilégios de filtros
   { username: 'marketing', password: 'marketing@753', role: 'marketing' as const }
 ];
