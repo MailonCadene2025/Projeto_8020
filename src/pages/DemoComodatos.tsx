@@ -70,14 +70,21 @@ const DemoComodatos = () => {
           initialFilteredData = initialFilteredData.filter(item => item.vendedor === user.vendedor);
         }
 
-        // Trava de regional para gerente (regional 3)
+        // Trava de regional para gerente (Rodrigo: Regional 4; Sandro: Regional 1; demais: Regional 3)
         if (user && user.role === 'gerente') {
           const regionais = extractUnique(demoData, 'regional');
-          const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
-          const regional3Value = regionais.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-          if (regional3Value) {
-            initialFilters.regional = [regional3Value];
-            initialFilteredData = initialFilteredData.filter(item => item.regional === regional3Value);
+          const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+          const un = (user.username || '').toLowerCase();
+          const isRodrigo = un === 'rodrigo';
+          const isSandro = un === 'sandro';
+          const regionalAlvo = isRodrigo
+            ? (regionais.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
+            : isSandro
+              ? (regionais.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
+              : regionais.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+          if (regionalAlvo) {
+            initialFilters.regional = [regionalAlvo];
+            initialFilteredData = initialFilteredData.filter(item => item.regional === regionalAlvo);
           }
         }
 
@@ -138,13 +145,20 @@ const DemoComodatos = () => {
       clearedFilters = { vendedor: [user.vendedor] };
     }
 
-    // Se o usuário for gerente, manter regional 3
+    // Se o usuário for gerente, manter regional travada (Rodrigo: Regional 4; Sandro: Regional 1; demais: Regional 3)
     if (user && user.role === 'gerente') {
       const regionais = [...new Set(data.map(item => item.regional).filter(Boolean))] as string[];
-      const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
-      const regional3Value = regionais.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      if (regional3Value) {
-        clearedFilters = { ...(clearedFilters as ActiveHistoryFilters), regional: [regional3Value] };
+      const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+      const un = (user.username || '').toLowerCase();
+      const isRodrigo = un === 'rodrigo';
+      const isSandro = un === 'sandro';
+      const regionalAlvo = isRodrigo
+        ? (regionais.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
+        : isSandro
+          ? (regionais.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
+          : regionais.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
+      if (regionalAlvo) {
+        clearedFilters = { ...(clearedFilters as ActiveHistoryFilters), regional: [regionalAlvo] };
       }
     }
 
