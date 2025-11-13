@@ -71,7 +71,7 @@ const ParetoProdutos = () => {
         : allVendedores;
 
       setFilterOptions({
-        clientes: [], // ocultaremos o campo cliente nesta página
+        clientes: GoogleSheetsService.extractUniqueValues(data, 'nomeFantasia'),
         cidades: GoogleSheetsService.extractUniqueValues(data, 'cidade'),
         estados: GoogleSheetsService.extractUniqueValues(data, 'uf'),
         categorias: GoogleSheetsService.extractUniqueValues(data, 'categoria'),
@@ -273,7 +273,7 @@ const ParetoProdutos = () => {
                   onApplyFilters={handleApplyFilters}
                   onClearFilters={handleClearFilters}
                   isLoading={isAnalyzing}
-                  hideCliente={true}
+                  hideCliente={false}
                 />
               )}
             </div>
