@@ -15,6 +15,7 @@ import ParetoProdutos from "./pages/ParetoProdutos";
 import Index from "./pages/Index";
 import LeadsCRM from "./pages/LeadsCRM";
 import Unauthorized from "./pages/Unauthorized";
+import CurvaCrescimento from "./pages/CurvaCrescimento";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["admin","gerente","vendedor"]}>
                   <YearOverYear />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/curva-crescimento" 
+              element={
+                <ProtectedRoute allowedRoles={["admin","gerente","vendedor"]}>
+                  <CurvaCrescimento />
                 </ProtectedRoute>
               } 
             />

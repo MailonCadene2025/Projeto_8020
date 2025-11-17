@@ -13,6 +13,7 @@ export const Header: React.FC = () => {
     { label: '📦 80/20 - Produtos', path: '/pareto-produtos' },
     { label: '📈 Histórico de Compras', path: '/history' },
     { label: '📉 Comparação Anual', path: '/year-over-year' },
+    { label: '📈 Curva de Crescimento', path: '/curva-crescimento' },
     { label: '🎁 Demonstrações', path: '/demo-comodatos' },
     { label: '📊 Leads', path: '/leads' },
   ];

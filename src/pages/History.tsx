@@ -288,7 +288,7 @@ const History = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Histórico de Compras 2024/2025</h1>
-          <p className="text-sm text-slate-500">Central de Inteligência Comercial - Tetris</p>
+          <p className="text-sm text-slate-500">Central de Inteligência Comercial - Terris</p>
         </div>
 
         {/* KPIs */}
