@@ -279,8 +279,11 @@ const LeadsCRM: React.FC = () => {
   const custoPorLead = leadsComCusto.length > 0 ? (leadsComCusto.reduce((acc, l) => acc + (l.valorUsado || 0), 0) / leadsComCusto.length) : 0;
   
   // Ticket Médio do Produto (mantido)
-  const ticketsValidos = filteredData.filter(l => l.ticketMedio && l.ticketMedio > 0);
-  const ticketMedioProduto = ticketsValidos.length > 0 ? (ticketsValidos.reduce((acc, l) => acc + l.ticketMedio, 0) / ticketsValidos.length) : 0;
+  // Ticket Médio: considerar APENAS leads convertidos (status "Vendida" na coluna K)
+  // Soma dos tickets médios dos convertidos / quantidade de convertidos
+  const leadsConvertidos = filteredData.filter(l => norm(l.estadoNegociacao) === 'Vendida');
+  const somaTicketMedioConvertidos = leadsConvertidos.reduce((acc, l) => acc + (l.ticketMedio || 0), 0);
+  const ticketMedioProduto = leadsConvertidos.length > 0 ? (somaTicketMedioConvertidos / leadsConvertidos.length) : 0;
 
   // Valor Investido (soma de valorUsado)
   const valorInvestido = filteredData.reduce((acc, l) => acc + (l.valorUsado || 0), 0);
