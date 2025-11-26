@@ -311,6 +311,9 @@ const YearOverYear = () => {
     });
   }, [filteredData, sortKey, sortOrder]);
 
+  // Formatador para exportação: decimal com vírgula, sem separador de milhar
+  const formatDecimalBR = (n: number) => n.toFixed(2).replace('.', ',');
+
   // Dados para o gráfico
   const chartData = filteredData.slice(0, 10).map(item => ({
     name: item.nomeFantasia.substring(0, 15) + (item.nomeFantasia.length > 15 ? '...' : ''),
@@ -403,20 +406,20 @@ const YearOverYear = () => {
           <p>Carregando...</p>
         ) : (
           <>
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-muted-foreground">Registros: {sortedData.length}</div>
-            <ExportMenu
-              data={sortedData}
-              fileBaseName="year-over-year"
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-muted-foreground">Registros: {sortedData.length}</div>
+              <ExportMenu
+                data={sortedData}
+                fileBaseName="year-over-year"
               columns={[
                 { label: 'Revenda', value: (i) => i.nomeFantasia },
                 { label: 'Quantidade 2024', value: (i) => i.totalItens2024 },
-                { label: 'Valor unitário 2024', value: (i) => i.valorUnitario2024.toFixed(2) },
-                { label: 'Faturamento 2024', value: (i) => i.faturamento2024.toFixed(2) },
+                { label: 'Valor unitário 2024', value: (i) => formatDecimalBR(i.valorUnitario2024) },
+                { label: 'Faturamento 2024', value: (i) => formatDecimalBR(i.faturamento2024) },
                 { label: 'Quantidade 2025', value: (i) => i.totalItens2025 },
-                { label: 'Valor unitário 2025', value: (i) => i.valorUnitario2025.toFixed(2) },
-                { label: 'Faturamento 2025', value: (i) => i.faturamento2025.toFixed(2) },
-                { label: 'Crescimento %', value: (i) => i.crescimentoPercentual.toFixed(1) },
+                { label: 'Valor unitário 2025', value: (i) => formatDecimalBR(i.valorUnitario2025) },
+                { label: 'Faturamento 2025', value: (i) => formatDecimalBR(i.faturamento2025) },
+                { label: 'Crescimento %', value: (i) => i.crescimentoPercentual.toFixed(1).replace('.', ',') },
               ] as ExportColumn<typeof sortedData[number]>[]}
             />
           </div>
