@@ -49,7 +49,7 @@ const DemoComodatos = () => {
         const extractUnique = (data: DemoComodatosData[], key: keyof DemoComodatosData) => [...new Set(data.map(item => item[key]).filter(Boolean))] as string[];
 
         const allVendedores = extractUnique(demoData, 'vendedor').sort();
-        const vendedoresOptions = user && user.role === 'vendedor' && user.vendedor 
+        const vendedoresOptions = (user && user.role === 'vendedor' && user.vendedor && ((user.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')) !== 'sara')
           ? [user.vendedor]
           : allVendedores;
 
@@ -65,26 +65,27 @@ const DemoComodatos = () => {
         let initialFilteredData = demoData;
         let initialFilters: ActiveHistoryFilters = {};
 
-        if (user && user.role === 'vendedor' && user.vendedor) {
+        if (user && user.role === 'vendedor' && user.vendedor && ((user.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')) !== 'sara') {
           initialFilters.vendedor = [user.vendedor];
           initialFilteredData = initialFilteredData.filter(item => item.vendedor === user.vendedor);
         }
 
-        // Trava de regional para gerente (Rodrigo: Regional 4; Sandro: Regional 1; demais: Regional 3)
-        if (user && user.role === 'gerente') {
+        // Trava de regional: gerente e casos especiais (João gerente e Sara vendedora com 2 e 3)
+        {
           const regionais = extractUnique(demoData, 'regional');
           const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-          const un = (user.username || '').toLowerCase();
-          const isRodrigo = un === 'rodrigo';
-          const isSandro = un === 'sandro';
-          const regionalAlvo = isRodrigo
-            ? (regionais.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-            : isSandro
-              ? (regionais.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-              : regionais.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-          if (regionalAlvo) {
-            initialFilters.regional = [regionalAlvo];
-            initialFilteredData = initialFilteredData.filter(item => item.regional === regionalAlvo);
+          const pickRegional = (label: string) => (
+            regionais.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+          );
+          const un = (user?.username || '').toLowerCase();
+          const unNorm = un.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const wantsTwoThree = unNorm === 'joao' || unNorm === 'sara';
+          if ((user && user.role === 'gerente') || unNorm === 'sara') {
+            const locked = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
+              unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+            ];
+            initialFilters.regional = locked;
+            initialFilteredData = initialFilteredData.filter(item => locked.includes(item.regional));
           }
         }
 
@@ -141,24 +142,23 @@ const DemoComodatos = () => {
   const handleClearFilters = () => {
     let clearedFilters: ActiveHistoryFilters | {} = {};
 
-    if (user && user.role === 'vendedor' && user.vendedor) {
+    if (user && user.role === 'vendedor' && user.vendedor && ((user.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')) !== 'sara') {
       clearedFilters = { vendedor: [user.vendedor] };
     }
 
-    // Se o usuário for gerente, manter regional travada (Rodrigo: Regional 4; Sandro: Regional 1; demais: Regional 3)
-    if (user && user.role === 'gerente') {
+    {
       const regionais = [...new Set(data.map(item => item.regional).filter(Boolean))] as string[];
       const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-      const un = (user.username || '').toLowerCase();
-      const isRodrigo = un === 'rodrigo';
-      const isSandro = un === 'sandro';
-      const regionalAlvo = isRodrigo
-        ? (regionais.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-        : isSandro
-          ? (regionais.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-          : regionais.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      if (regionalAlvo) {
-        clearedFilters = { ...(clearedFilters as ActiveHistoryFilters), regional: [regionalAlvo] };
+      const pickRegional = (label: string) => (
+        regionais.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+      );
+      const un = (user?.username || '').toLowerCase();
+      const unNorm = un.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const wantsTwoThree = unNorm === 'joao' || unNorm === 'sara';
+      if ((user && user.role === 'gerente') || unNorm === 'sara') {
+        clearedFilters = { ...(clearedFilters as ActiveHistoryFilters), regional: wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
+          unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+        ] };
       }
     }
 
@@ -176,12 +176,14 @@ const DemoComodatos = () => {
 
     setFilteredData(dataToShow);
 
+    const unTo = (user?.username || '').toLowerCase();
+    const unToNorm = unTo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     toast({
       title: 'Filtros limpos',
       description: user?.role === 'vendedor' 
         ? 'Filtros limpos. Filtro de vendedor mantido.' 
-        : user?.role === 'gerente' 
-          ? 'Filtros limpos. Regional 3 mantida.' 
+        : (user?.role === 'gerente' || unToNorm === 'sara')
+          ? (unToNorm === 'joao' || unToNorm === 'sara' ? 'Filtros limpos. Regionais 2 e 3 mantidas.' : (unToNorm === 'rodrigo' ? 'Filtros limpos. Regional 4 mantida.' : (unToNorm === 'sandro' ? 'Filtros limpos. Regional 1 mantida.' : 'Filtros limpos. Regional 3 mantida.')))
           : 'Mostrando todos os dados disponíveis.',
     });
   };

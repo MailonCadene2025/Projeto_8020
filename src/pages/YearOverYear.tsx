@@ -67,7 +67,7 @@ const YearOverYear = () => {
 
         // Filtrar opções de vendedores baseado no papel do usuário
         const allVendedores = extractUnique(historyData, 'vendedor').sort();
-        const vendedoresOptions = user && user.role === 'vendedor' && user.vendedor 
+        const vendedoresOptions = (user && user.role === 'vendedor' && user.vendedor && user.username.toLowerCase() !== 'sara')
           ? [user.vendedor]
           : allVendedores;
 
@@ -83,23 +83,30 @@ const YearOverYear = () => {
         // Aplicar filtros automáticos
         let initialFilters: ActiveYearOverYearFilters = {};
         
-        if (user && user.role === 'vendedor' && user.vendedor) {
+        // Vendedor: não restringir Sara ao seu nome
+        if (user && user.role === 'vendedor' && user.vendedor && user.username.toLowerCase() !== 'sara') {
           initialFilters.vendedor = [user.vendedor];
         }
-        
-        // Trava de regional para gerente (Rodrigo: Regional 4; Sandro: Regional 1; outros: Regional 3)
-        if (user && user.role === 'gerente') {
-          const regionaisOpts = extractUnique(historyData, 'regional').sort();
-          const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-          const un = user.username.toLowerCase();
-          const isRodrigo = un === 'rodrigo';
-          const isSandro = un === 'sandro';
-          const regionalAlvo = isRodrigo
-            ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-            : isSandro
-              ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-              : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-          if (regionalAlvo) {
+
+        // Trava de regional: gerente e casos especiais (João gerente e Sara vendedora com 2 e 3)
+        const regionaisOpts = extractUnique(historyData, 'regional').sort();
+        const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+        const un = (user?.username || '').toLowerCase();
+        const pickRegional = (label: string) => (
+          regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+        );
+        const wantsTwoThree = un === 'joao' || un === 'sara';
+        if ((user && user.role === 'gerente') || un === 'sara') {
+          if (wantsTwoThree) {
+            initialFilters.regional = [pickRegional('2'), pickRegional('3')];
+          } else {
+            const isRodrigo = un === 'rodrigo';
+            const isSandro = un === 'sandro';
+            const regionalAlvo = isRodrigo
+              ? pickRegional('4')
+              : isSandro
+                ? pickRegional('1')
+                : pickRegional('3');
             initialFilters.regional = [regionalAlvo];
           }
         }
@@ -227,24 +234,23 @@ const YearOverYear = () => {
   const handleClearFilters = () => {
     let clearedFilters: ActiveYearOverYearFilters = {};
     
-    if (user && user.role === 'vendedor' && user.vendedor) {
+    if (user && user.role === 'vendedor' && user.vendedor && user.username.toLowerCase() !== 'sara') {
       clearedFilters.vendedor = [user.vendedor];
     }
     
-    // Manter trava de regional para gerente (Rodrigo: Regional 4; Sandro: Regional 1; outros: Regional 3)
-    if (user && user.role === 'gerente') {
+    // Manter trava de regional para gerente e casos especiais
+    {
       const regionaisOpts = [...new Set(rawData.map(item => item.regional).filter(Boolean))] as string[];
       const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-      const un = user.username.toLowerCase();
-      const isRodrigo = un === 'rodrigo';
-      const isSandro = un === 'sandro';
-      const regionalAlvo = isRodrigo
-        ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-        : isSandro
-          ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-          : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      if (regionalAlvo) {
-        clearedFilters.regional = [regionalAlvo];
+      const un = (user?.username || '').toLowerCase();
+      const pickRegional = (label: string) => (
+        regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+      );
+      const wantsTwoThree = un === 'joao' || un === 'sara';
+      if ((user && user.role === 'gerente') || un === 'sara') {
+        clearedFilters.regional = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
+          un === 'rodrigo' ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
+        ];
       }
     }
     
@@ -253,14 +259,13 @@ const YearOverYear = () => {
     const recomputed = processYearOverYearData(rawData, clearedFilters);
     setFilteredData(recomputed);
     
-    const isRodrigo = user?.username?.toLowerCase() === 'rodrigo';
-    const isSandro = user?.username?.toLowerCase() === 'sandro';
+    const un = user?.username?.toLowerCase();
     toast({
       title: "Filtros limpos",
       description: user?.role === 'vendedor' 
         ? "Filtros limpos. Filtro de vendedor mantido."
-        : user?.role === 'gerente' 
-          ? (isRodrigo ? "Filtros limpos. Regional 4 mantida." : (isSandro ? "Filtros limpos. Regional 1 mantida." : "Filtros limpos. Regional 3 mantida."))
+        : (user?.role === 'gerente' || un === 'sara') 
+          ? (un === 'joao' || un === 'sara' ? "Filtros limpos. Regionais 2 e 3 mantidas." : (un === 'rodrigo' ? "Filtros limpos. Regional 4 mantida." : (un === 'sandro' ? "Filtros limpos. Regional 1 mantida." : "Filtros limpos. Regional 3 mantida.")))
           : "Mostrando todos os dados disponíveis.",
     });
   };

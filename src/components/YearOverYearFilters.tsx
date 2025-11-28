@@ -92,8 +92,20 @@ export const YearOverYearFilters: React.FC<YearOverYearFiltersProps> = ({
           {renderSelectField('cidade', 'Cidade', filterOptions.cidade, 'Selecione uma cidade')}
           {renderSelectField('estado', 'Estado', filterOptions.estado, 'Selecione um estado')}
           {renderSelectField('categoria', 'Categoria', filterOptions.categoria, 'Selecione uma categoria')}
-          {renderSelectField('vendedor', 'Vendedor', filterOptions.vendedor, 'Selecione um vendedor', user?.role === 'vendedor')}
-          {renderSelectField('regional', 'Regional', filterOptions.regional, 'Selecione uma regional', user?.role === 'gerente')}
+          {renderSelectField(
+            'vendedor',
+            'Vendedor',
+            filterOptions.vendedor,
+            'Selecione um vendedor',
+            user?.role === 'vendedor' && ((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') !== 'sara')
+          )}
+          {renderSelectField(
+            'regional',
+            'Regional',
+            filterOptions.regional,
+            'Selecione uma regional',
+            (user?.role === 'gerente') || ['sara','joao'].includes(((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+          )}
         </div>
 
         <div className="flex justify-between items-center mt-6 pt-4 border-t">

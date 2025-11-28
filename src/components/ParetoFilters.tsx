@@ -149,8 +149,20 @@ export const ParetoFilters: React.FC<ParetoFiltersProps> = ({
             {renderSelectField('cidade', 'Cidade', filterOptions.cidades, 'Selecione uma cidade')}
             {renderSelectField('estado', 'Estado', filterOptions.estados, 'Selecione um estado')}
             {renderSelectField('categoria', 'Categoria', filterOptions.categorias, 'Selecione uma categoria')}
-            {renderSelectField('vendedor', 'Vendedor', filterOptions.vendedores, 'Selecione um vendedor', user?.role === 'vendedor')}
-            {renderSelectField('regional', 'Regional', filterOptions.regionais, 'Selecione uma regional', user?.role === 'gerente')}
+            {renderSelectField(
+              'vendedor',
+              'Vendedor',
+              filterOptions.vendedores,
+              'Selecione um vendedor',
+              user?.role === 'vendedor' && ((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') !== 'sara')
+            )}
+            {renderSelectField(
+              'regional',
+              'Regional',
+              filterOptions.regionais,
+              'Selecione uma regional',
+              (user?.role === 'gerente') || ['sara','joao'].includes(((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+            )}
             {renderSelectField('tipoCliente', 'Tipo Cliente', filterOptions.tiposCliente, 'Selecione um tipo')}
           </div>
 

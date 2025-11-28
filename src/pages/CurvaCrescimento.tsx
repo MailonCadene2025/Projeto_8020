@@ -111,7 +111,7 @@ const CurvaCrescimento: React.FC = () => {
           [...new Set(data.map(item => item[key]).filter(Boolean))] as string[];
 
         const allVendedores = extractUnique(historyData, 'vendedor').sort();
-        const vendedoresOptions = user && user.role === 'vendedor' && user.vendedor
+        const vendedoresOptions = (user && user.role === 'vendedor' && user.vendedor && ((user.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')) !== 'sara')
           ? [user.vendedor]
           : allVendedores;
 
@@ -129,21 +129,22 @@ const CurvaCrescimento: React.FC = () => {
         let initialFilters: ActiveFilters = {};
         let baseData: HistoryData[] = historyData;
 
-        if (user && user.role === 'vendedor' && user.vendedor) {
+        const regionaisOpts = extractUnique(historyData, 'regional');
+        const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+        const pickRegional = (label: string) => (
+          regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+        );
+        const un = (user?.username || '').toLowerCase();
+        const unNorm = un.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        if (user && user.role === 'vendedor' && user.vendedor && unNorm !== 'sara') {
           initialFilters.vendedor = [user.vendedor];
         }
-        if (user && user.role === 'gerente') {
-          const regionaisOpts = extractUnique(historyData, 'regional');
-          const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-          const un = (user.username || '').toLowerCase();
-          const isRodrigo = un === 'rodrigo';
-          const isSandro = un === 'sandro';
-          const regionalAlvo = isRodrigo
-            ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-            : isSandro
-              ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-              : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-          if (regionalAlvo) initialFilters.regional = [regionalAlvo];
+        if ((user && user.role === 'gerente') || unNorm === 'sara') {
+          const locked = (unNorm === 'joao' || unNorm === 'sara') ? [pickRegional('2'), pickRegional('3')] : [
+            unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+          ];
+          initialFilters.regional = locked;
         }
 
         setActiveFilters(initialFilters);
@@ -206,21 +207,23 @@ const CurvaCrescimento: React.FC = () => {
 
   const clearFilters = () => {
     let cleared: ActiveFilters = {};
-    if (user && user.role === 'vendedor' && user.vendedor) {
+    if (user && user.role === 'vendedor' && user.vendedor && ((user.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')) !== 'sara') {
       cleared.vendedor = [user.vendedor];
     }
-    if (user && user.role === 'gerente') {
+    {
       const regionaisOpts = Array.from(new Set(rawData.map(i => i.regional).filter(Boolean)));
       const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-      const un = (user.username || '').toLowerCase();
-      const isRodrigo = un === 'rodrigo';
-      const isSandro = un === 'sandro';
-      const regionalAlvo = isRodrigo
-        ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-        : isSandro
-          ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-          : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      if (regionalAlvo) cleared.regional = [regionalAlvo];
+      const pickRegional = (label: string) => (
+        regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+      );
+      const un = (user?.username || '').toLowerCase();
+      const unNorm = un.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const wantsTwoThree = unNorm === 'joao' || unNorm === 'sara';
+      if ((user && user.role === 'gerente') || unNorm === 'sara') {
+        cleared.regional = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
+          unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+        ];
+      }
     }
     setActiveFilters(cleared);
     const filtered = GoogleSheetsService.filterData(rawData as any, cleared as any) as any;

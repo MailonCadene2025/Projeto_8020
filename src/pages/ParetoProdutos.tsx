@@ -66,7 +66,7 @@ const ParetoProdutos = () => {
       setRawData(data);
 
       const allVendedores = GoogleSheetsService.extractUniqueValues(data, 'vendedor');
-      const vendedoresOptions = user && user.role === 'vendedor' && user.vendedor 
+      const vendedoresOptions = (user && user.role === 'vendedor' && user.vendedor && user.username.toLowerCase() !== 'sara')
         ? [user.vendedor]
         : allVendedores;
 
@@ -83,29 +83,28 @@ const ParetoProdutos = () => {
       let filteredData = data;
       let filtersToApply: ActiveFilters = {};
 
-      if (user && user.role === 'vendedor' && user.vendedor) {
+      const regionaisOpts = GoogleSheetsService.extractUniqueValues(data, 'regional');
+      const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
+      const pickRegional = (label: string) => (
+        regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+      );
+      const un = (user?.username || '').toLowerCase();
+      const unNorm = un.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      if (user && user.role === 'vendedor' && user.vendedor && unNorm !== 'sara') {
         filtersToApply = { vendedor: [user.vendedor] };
-        filteredData = GoogleSheetsService.filterData(data, filtersToApply);
-        setActiveFilters(filtersToApply);
       }
 
-      // Trava de regional para gerente (Rodrigo: Regional 4; Sandro: Regional 1; outros: Regional 3)
-      if (user && user.role === 'gerente') {
-        const regionaisOpts = GoogleSheetsService.extractUniqueValues(data, 'regional');
-        const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-        const un = user.username.toLowerCase();
-        const isRodrigo = un === 'rodrigo';
-        const isSandro = un === 'sandro';
-        const regionalAlvo = isRodrigo
-          ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-          : isSandro
-            ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-            : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-        if (regionalAlvo) {
-          filtersToApply = { ...filtersToApply, regional: [regionalAlvo] };
-          filteredData = GoogleSheetsService.filterData(data, filtersToApply);
-          setActiveFilters(filtersToApply);
-        }
+      if ((user && user.role === 'gerente') || unNorm === 'sara') {
+        const locked = (unNorm === 'joao' || unNorm === 'sara') ? [pickRegional('2'), pickRegional('3')] : [
+          unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+        ];
+        filtersToApply = { ...filtersToApply, regional: locked };
+      }
+
+      if (Object.keys(filtersToApply).length > 0) {
+        filteredData = GoogleSheetsService.filterData(data, filtersToApply);
+        setActiveFilters(filtersToApply);
       }
 
       setFilteredData(filteredData);
@@ -154,24 +153,23 @@ const ParetoProdutos = () => {
 
   const handleClearFilters = () => {
     let clearedFilters: ActiveFilters = {};
-    if (user && user.role === 'vendedor' && user.vendedor) {
+    if (user && user.role === 'vendedor' && user.vendedor && ((user.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')) !== 'sara') {
       clearedFilters = { vendedor: [user.vendedor] };
     }
 
-    // Se o usuário for gerente, manter regional travada (Rodrigo: Regional 4; Sandro: Regional 1; outros: Regional 3)
-    if (user && user.role === 'gerente') {
+    {
       const regionaisOpts = GoogleSheetsService.extractUniqueValues(rawData, 'regional');
       const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-      const un = user.username.toLowerCase();
-      const isRodrigo = un === 'rodrigo';
-      const isSandro = un === 'sandro';
-      const regionalAlvo = isRodrigo
-        ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-        : isSandro
-          ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-          : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      if (regionalAlvo) {
-        clearedFilters = { ...clearedFilters, regional: [regionalAlvo] };
+      const pickRegional = (label: string) => (
+        regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+      );
+      const un = (user?.username || '').toLowerCase();
+      const unNorm = un.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const wantsTwoThree = unNorm === 'joao' || unNorm === 'sara';
+      if ((user && user.role === 'gerente') || unNorm === 'sara') {
+        clearedFilters = { ...clearedFilters, regional: wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
+          unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+        ] };
       }
     }
 
@@ -185,14 +183,14 @@ const ParetoProdutos = () => {
     setFilteredData(dataToAnalyze);
     performAnalysis(dataToAnalyze);
 
-    const isRodrigo = user?.username?.toLowerCase() === 'rodrigo';
-    const isSandro = user?.username?.toLowerCase() === 'sandro';
+    const unTo = (user?.username || '').toLowerCase();
+    const unToNorm = unTo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     toast({
       title: 'Filtros limpos',
       description: user?.role === 'vendedor' 
         ? 'Filtros limpos. Filtro de vendedor mantido.'
-        : user?.role === 'gerente'
-          ? (isRodrigo ? 'Filtros limpos. Regional 4 mantida.' : (isSandro ? 'Filtros limpos. Regional 1 mantida.' : 'Filtros limpos. Regional 3 mantida.'))
+        : (user?.role === 'gerente' || unToNorm === 'sara')
+          ? (unToNorm === 'joao' || unToNorm === 'sara' ? 'Filtros limpos. Regionais 2 e 3 mantidas.' : (unToNorm === 'rodrigo' ? 'Filtros limpos. Regional 4 mantida.' : (unToNorm === 'sandro' ? 'Filtros limpos. Regional 1 mantida.' : 'Filtros limpos. Regional 3 mantida.')))
           : 'Mostrando todos os dados disponíveis.',
     });
   };
@@ -213,24 +211,28 @@ const ParetoProdutos = () => {
   };
 
   useEffect(() => {
-    if (user && user.role === 'vendedor' && user.vendedor && rawData.length > 0) {
-      const newFilters = { ...activeFilters, vendedor: [user.vendedor] };
-      setActiveFilters(newFilters);
-      const filtered = GoogleSheetsService.filterData(rawData, newFilters);
-      setFilteredData(filtered);
-      performAnalysis(filtered);
-    } else if (user && user.role === 'gerente' && rawData.length > 0) {
+    if (rawData.length > 0) {
       const regionaisOpts = GoogleSheetsService.extractUniqueValues(rawData, 'regional');
       const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
-      const un = user.username.toLowerCase();
-      const isRodrigo = un === 'rodrigo';
-      const isSandro = un === 'sandro';
-      const regionalAlvo = isRodrigo
-        ? (regionaisOpts.find(r => normalize(r) === 'regional4' || normalize(r) === 'regiao4' || r === '4') || 'Regional 4')
-        : isSandro
-          ? (regionaisOpts.find(r => normalize(r) === 'regional1' || normalize(r) === 'regiao1' || r === '1') || 'Regional 1')
-          : regionaisOpts.find(r => normalize(r) === 'regional3' || normalize(r) === 'regiao3' || r === '3');
-      const newFilters: ActiveFilters = regionalAlvo ? { ...activeFilters, regional: [regionalAlvo] } : { ...activeFilters };
+      const pickRegional = (label: string) => (
+        regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
+      );
+      const un = (user?.username || '').toLowerCase();
+      const unNorm = un.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      let newFilters = { ...activeFilters } as ActiveFilters;
+
+      if (user && user.role === 'vendedor' && user.vendedor && unNorm !== 'sara') {
+        newFilters = { ...newFilters, vendedor: [user.vendedor] };
+      }
+
+      if ((user && user.role === 'gerente') || unNorm === 'sara') {
+        const locked = (unNorm === 'joao' || unNorm === 'sara') ? [pickRegional('2'), pickRegional('3')] : [
+          unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+        ];
+        newFilters = { ...newFilters, regional: locked };
+      }
+
       setActiveFilters(newFilters);
       const filtered = GoogleSheetsService.filterData(rawData, newFilters);
       setFilteredData(filtered);
