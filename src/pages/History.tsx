@@ -36,6 +36,7 @@ const History = () => {
   const [selectedSale, setSelectedSale] = useState<HistoryData | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const { toast } = useToast();
+  const [clienteTipoMap, setClienteTipoMap] = useState<Record<string, string>>({});
 
   const formatCurrency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -81,6 +82,7 @@ const History = () => {
       try {
         const service = new GoogleSheetsService(API_KEY, SHEET_ID);
         const historyData = await service.fetchHistoryData();
+        const vendas = await service.fetchData();
         setData(historyData);
         
         // Extract filter options, filtering out empty values
@@ -92,6 +94,17 @@ const History = () => {
           ? [user.vendedor] // Se for vendedor (exceto Sara), mostrar apenas seu próprio nome
           : allVendedores;   // Admin e Sara veem todos
 
+        // Mapear Tipo de Cliente por nome a partir de VENDAS
+        const tipoMap: Record<string, string> = {};
+        vendas.forEach(v => {
+          const nome = (v.nomeFantasia || '').trim();
+          const tipo = (v.tipoCliente || '').trim();
+          if (nome && tipo && !tipoMap[nome]) tipoMap[nome] = tipo;
+        });
+        setClienteTipoMap(tipoMap);
+
+        const tiposCliente = [...new Set(vendas.map(v => (v.tipoCliente || '').trim()).filter(Boolean))].sort();
+
         setFilterOptions({
           cliente: extractUnique(historyData, 'nomeFantasia').sort(),
           categoria: extractUnique(historyData, 'categoria').sort(),
@@ -99,6 +112,7 @@ const History = () => {
           estado: extractUnique(historyData, 'uf').sort(),
           cidade: extractUnique(historyData, 'cidade').sort(),
           vendedor: vendedoresOptions,
+          tiposCliente,
         });
 
         // Aplicar filtros automáticos
@@ -189,6 +203,11 @@ const History = () => {
       if (!match(activeFilters.estado, item.uf)) return false;
       if (!match(activeFilters.cidade, item.cidade)) return false;
       if (!match(activeFilters.vendedor, item.vendedor)) return false;
+      // Tipo de Cliente (derivado de VENDAS por nome do cliente)
+      if (activeFilters.tipoCliente && activeFilters.tipoCliente.length > 0) {
+        const tipo = clienteTipoMap[(item.nomeFantasia || '').trim()];
+        if (!tipo || !activeFilters.tipoCliente.includes(tipo)) return false;
+      }
       return true;
     });
     // Exceção João gerente: unir vendas do vendedor João respeitando filtro de vendedor (se houver)
