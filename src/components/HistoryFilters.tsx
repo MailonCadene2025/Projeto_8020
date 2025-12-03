@@ -133,7 +133,7 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
             'Regional',
             filterOptions.regional,
             'Selecione uma regional',
-            (user?.role === 'gerente') || ['sara','joao'].includes(((user?.username || '').toLowerCase().normalize('NFD').replace(/\[\u0300-\u036f]/g, '')))
+            (user?.role === 'gerente') || ['sara','joao'].includes(((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
           )}
 
           {/* Tipo de Cliente: renderiza somente se houver opções */}
