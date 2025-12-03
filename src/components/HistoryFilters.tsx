@@ -36,6 +36,8 @@ interface HistoryFiltersProps {
   onApplyFilters: () => void;
   onClearFilters: () => void;
   isLoading?: boolean;
+  // Área opcional para filtros adicionais (ex.: RFV)
+  extraFilters?: React.ReactNode;
 }
 
 export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
@@ -45,6 +47,7 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
   onApplyFilters,
   onClearFilters,
   isLoading = false,
+  extraFilters,
 }) => {
   const { user } = useAuth();
 
@@ -142,13 +145,20 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
               'Selecione um tipo'
             )
           )}
-        </div>
+      </div>
 
-        <div className="flex justify-between items-center mt-6 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={onClearFilters}
-            disabled={isLoading}
+      {/* Filtros adicionais (RFV, etc.) */}
+      {extraFilters && (
+        <div className="mt-4">
+          {extraFilters}
+        </div>
+      )}
+
+      <div className="flex justify-between items-center mt-6 pt-4 border-t">
+        <Button
+          variant="outline"
+          onClick={onClearFilters}
+          disabled={isLoading}
             className="flex items-center gap-2"
           >
             <RotateCcw className="h-4 w-4" />
