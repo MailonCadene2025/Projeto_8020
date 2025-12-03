@@ -116,8 +116,17 @@ const Index = () => {
         filteredData = GoogleSheetsService.filterData(data, filtersToApply);
         setActiveFilters(filtersToApply);
       }
-      
-      setFilteredData(filteredData);
+
+      // Exceção: gerente "João" deve ver vendas do vendedor "João" independente de regional
+      const norm = (s: string) => (s || '').normalize('NFD').replace(/\[\u0300-\u036f]/g, '').toLowerCase();
+      const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+      const vendorsSelected = filtersToApply.vendedor || undefined;
+      const extraJoao = isJoaoGerente
+        ? data.filter(i => norm(i.vendedor) === 'joao' && (!vendorsSelected || vendorsSelected.includes(i.vendedor)))
+        : [];
+      const combined = Array.from(new Set([...filteredData, ...extraJoao]));
+
+      setFilteredData(combined);
       setIsConnected(true);
       
       // Perform initial analysis with filtered data
@@ -149,7 +158,16 @@ const Index = () => {
     
     try {
       const filtered = GoogleSheetsService.filterData(rawData, activeFilters);
-      setFilteredData(filtered);
+      // Exceção: gerente "João" deve ver vendas do vendedor "João" independente de regional
+      const norm = (s: string) => (s || '').normalize('NFD').replace(/\[\u0300-\u036f]/g, '').toLowerCase();
+      const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+      const vendorsSelected = activeFilters.vendedor || undefined;
+      const extraJoao = isJoaoGerente
+        ? rawData.filter(i => norm(i.vendedor) === 'joao' && (!vendorsSelected || vendorsSelected.includes(i.vendedor)))
+        : [];
+      const combined = Array.from(new Set([...filtered, ...extraJoao]));
+
+      setFilteredData(combined);
       performAnalysis(filtered);
       
       toast({
@@ -201,9 +219,17 @@ const Index = () => {
     if (Object.keys(clearedFilters).length > 0) {
       dataToAnalyze = GoogleSheetsService.filterData(rawData, clearedFilters);
     }
+    // Exceção João gerente
+    const norm = (s: string) => (s || '').normalize('NFD').replace(/\[\u0300-\u036f]/g, '').toLowerCase();
+    const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+    const vendorsSelected = (clearedFilters as ActiveFilters).vendedor || undefined;
+    const extraJoao = isJoaoGerente
+      ? rawData.filter(i => norm(i.vendedor) === 'joao' && (!vendorsSelected || vendorsSelected.includes(i.vendedor)))
+      : [];
+    const combined = Array.from(new Set([...dataToAnalyze, ...extraJoao]));
     
-    setFilteredData(dataToAnalyze);
-    performAnalysis(dataToAnalyze);
+    setFilteredData(combined);
+    performAnalysis(combined);
     
     const unTo = (user?.username || '').toLowerCase();
     const unToNorm = unTo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -261,8 +287,16 @@ const Index = () => {
 
       setActiveFilters(newFilters);
       const filtered = GoogleSheetsService.filterData(rawData, newFilters);
-      setFilteredData(filtered);
-      performAnalysis(filtered);
+      // Exceção João gerente
+      const norm = (s: string) => (s || '').normalize('NFD').replace(/\[\u0300-\u036f]/g, '').toLowerCase();
+      const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+      const vendorsSelected = newFilters.vendedor || undefined;
+      const extraJoao = isJoaoGerente
+        ? rawData.filter(i => norm(i.vendedor) === 'joao' && (!vendorsSelected || vendorsSelected.includes(i.vendedor)))
+        : [];
+      const combined = Array.from(new Set([...filtered, ...extraJoao]));
+      setFilteredData(combined);
+      performAnalysis(combined);
     } else if (user && user.role === 'admin') {
       // Admin tem acesso total, limpar filtros específicos
       setActiveFilters({});

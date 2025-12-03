@@ -90,7 +90,15 @@ const DemoComodatos = () => {
         }
 
         setActiveFilters(initialFilters);
-        setFilteredData(initialFilteredData);
+        // Exceção: gerente João vê vendas do vendedor João
+        const norm = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+        const vendorsSelected = initialFilters.vendedor || undefined;
+        const extraJoao = isJoaoGerente
+          ? demoData.filter(i => norm(i.vendedor) === 'joao' && (!vendorsSelected || vendorsSelected.includes(i.vendedor)))
+          : [];
+        const combined = Array.from(new Set([...initialFilteredData, ...extraJoao]));
+        setFilteredData(combined);
         setIsLoading(false);
       } catch (error) {
         console.error('Erro ao buscar dados de demonstrações/comodatos:', error);
@@ -136,7 +144,27 @@ const DemoComodatos = () => {
       if (!match(activeFilters.vendedor, item.vendedor)) return false;
       return true;
     });
-    setFilteredData(filtered);
+    // Exceção João gerente
+    const norm = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+    const vendorsSelected = activeFilters.vendedor || undefined;
+    const extraJoao = isJoaoGerente
+      ? data.filter(i => {
+          if (norm(i.vendedor) !== 'joao') return false;
+          if (vendorsSelected && vendorsSelected.length > 0 && !vendorsSelected.includes(i.vendedor)) return false;
+          const match = (filterVal: string[] | undefined, candidate: string) => {
+            if (!filterVal) return true;
+            return filterVal.length === 0 ? true : filterVal.includes(candidate);
+          };
+          if (!match(activeFilters.cliente, i.nomeFantasia)) return false;
+          if (!match(activeFilters.categoria, i.categoria)) return false;
+          if (!match(activeFilters.estado, i.uf)) return false;
+          if (!match(activeFilters.cidade, i.cidade)) return false;
+          return true;
+        })
+      : [];
+    const combined = Array.from(new Set([...filtered, ...extraJoao]));
+    setFilteredData(combined);
   };
 
   const handleClearFilters = () => {
@@ -174,7 +202,16 @@ const DemoComodatos = () => {
       });
     }
 
-    setFilteredData(dataToShow);
+    // Exceção João gerente
+    const norm2 = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const isJoaoGerente2 = (user?.role === 'gerente' && norm2(user?.username || '') === 'joao');
+    const vendorsSelected2 = (clearedFilters as ActiveHistoryFilters).vendedor || undefined;
+    const extraJoao2 = isJoaoGerente2
+      ? data.filter(i => norm2(i.vendedor) === 'joao' && (!vendorsSelected2 || vendorsSelected2.includes(i.vendedor)))
+      : [];
+    const combined2 = Array.from(new Set([...dataToShow, ...extraJoao2]));
+
+    setFilteredData(combined2);
 
     const unTo = (user?.username || '').toLowerCase();
     const unToNorm = unTo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { YearOverYearFilters } from '@/components/YearOverYearFilters';
 import type { FilterOptions as YearOverYearFilterOptions, ActiveFilters as BaseActiveFilters } from '@/components/YearOverYearFilters';
-import { GoogleSheetsService, HistoryData } from '@/services/googleSheetsService';
+import { GoogleSheetsService, SalesData } from '@/services/googleSheetsService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -40,12 +40,12 @@ type ActiveYearOverYearFilters = BaseActiveFilters & { dataInicio?: string; data
 const YearOverYear = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [rawData, setRawData] = useState<HistoryData[]>([]);
+  const [rawData, setRawData] = useState<SalesData[]>([]);
   const [data, setData] = useState<YearOverYearData[]>([]);
   const [filteredData, setFilteredData] = useState<YearOverYearData[]>([]);
   const [sortKey, setSortKey] = useState<keyof YearOverYearData | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filterOptions, setFilterOptions] = useState<YearOverYearFilterOptions>({ cliente: [], categoria: [], regional: [], estado: [], cidade: [], vendedor: [] });
+  const [filterOptions, setFilterOptions] = useState<YearOverYearFilterOptions>({ cliente: [], categoria: [], regional: [], estado: [], cidade: [], vendedor: [], tiposCliente: [] });
   const [activeFilters, setActiveFilters] = useState<ActiveYearOverYearFilters>({});
   const [isLoading, setIsLoading] = useState(true);
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
@@ -55,29 +55,30 @@ const YearOverYear = () => {
     const fetchData = async () => {
       try {
         const service = new GoogleSheetsService(API_KEY, SHEET_ID);
-        const historyData = await service.fetchHistoryData();
-        setRawData(historyData);
+        const salesData = await service.fetchData();
+        setRawData(salesData);
         
         // Processar dados para comparativo anual
-        const yearOverYearData = processYearOverYearData(historyData);
+        const yearOverYearData = processYearOverYearData(salesData);
         setData(yearOverYearData);
         
         // Extract filter options
-        const extractUnique = (data: HistoryData[], key: keyof HistoryData) => [...new Set(data.map(item => item[key]).filter(Boolean))] as string[];
+        const extractUnique = (data: SalesData[], key: keyof SalesData) => [...new Set(data.map(item => item[key]).filter(Boolean))] as string[];
 
         // Filtrar opções de vendedores baseado no papel do usuário
-        const allVendedores = extractUnique(historyData, 'vendedor').sort();
+        const allVendedores = extractUnique(salesData, 'vendedor').sort();
         const vendedoresOptions = (user && user.role === 'vendedor' && user.vendedor && user.username.toLowerCase() !== 'sara')
           ? [user.vendedor]
           : allVendedores;
 
         setFilterOptions({
-          cliente: extractUnique(historyData, 'nomeFantasia').sort(),
-          categoria: extractUnique(historyData, 'categoria').sort(),
-          regional: extractUnique(historyData, 'regional').sort(),
-          estado: extractUnique(historyData, 'uf').sort(),
-          cidade: extractUnique(historyData, 'cidade').sort(),
+          cliente: extractUnique(salesData, 'nomeFantasia').sort(),
+          categoria: extractUnique(salesData, 'categoria').sort(),
+          regional: extractUnique(salesData, 'regional').sort(),
+          estado: extractUnique(salesData, 'uf').sort(),
+          cidade: extractUnique(salesData, 'cidade').sort(),
           vendedor: vendedoresOptions,
+          tiposCliente: extractUnique(salesData, 'tipoCliente').sort(),
         });
 
         // Aplicar filtros automáticos
@@ -89,7 +90,7 @@ const YearOverYear = () => {
         }
 
         // Trava de regional: gerente e casos especiais (João gerente e Sara vendedora com 2 e 3)
-        const regionaisOpts = extractUnique(historyData, 'regional').sort();
+        const regionaisOpts = extractUnique(salesData, 'regional').sort();
         const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '');
         const un = (user?.username || '').toLowerCase();
         const pickRegional = (label: string) => (
@@ -112,7 +113,7 @@ const YearOverYear = () => {
         }
 
         setActiveFilters(initialFilters);
-        const initialFilteredData = processYearOverYearData(historyData, initialFilters);
+        const initialFilteredData = processYearOverYearData(salesData, initialFilters);
         setFilteredData(initialFilteredData);
         setIsLoading(false);
       } catch (error) {
@@ -129,7 +130,7 @@ const YearOverYear = () => {
     fetchData();
   }, [user, toast]);
 
-  const processYearOverYearData = (historyData: HistoryData[], filters?: ActiveYearOverYearFilters): YearOverYearData[] => {
+  const processYearOverYearData = (historyData: SalesData[], filters?: ActiveYearOverYearFilters): YearOverYearData[] => {
     const clientMap = new Map<string, YearOverYearData>();
     const match = (vals?: string[], candidate?: string) => {
       if (!vals) return true;
@@ -156,6 +157,7 @@ const YearOverYear = () => {
 
       if (!match(filters.cliente, item.nomeFantasia)) return false;
       if (!match(filters.categoria, item.categoria)) return false;
+      if (!match(filters.tipoCliente, item.tipoCliente)) return false;
       if (!match(filters.regional, item.regional)) return false;
       if (!match(filters.estado, item.uf)) return false;
       if (!match(filters.cidade, item.cidade)) return false;

@@ -13,6 +13,7 @@ export interface FilterOptions {
   categoria: string[];
   vendedor: string[];
   regional: string[];
+  tiposCliente: string[];
 }
 
 export interface ActiveFilters {
@@ -22,6 +23,7 @@ export interface ActiveFilters {
   categoria?: string[];
   vendedor?: string[];
   regional?: string[];
+  tipoCliente?: string[];
 }
 
 interface YearOverYearFiltersProps {
@@ -92,6 +94,7 @@ export const YearOverYearFilters: React.FC<YearOverYearFiltersProps> = ({
           {renderSelectField('cidade', 'Cidade', filterOptions.cidade, 'Selecione uma cidade')}
           {renderSelectField('estado', 'Estado', filterOptions.estado, 'Selecione um estado')}
           {renderSelectField('categoria', 'Categoria', filterOptions.categoria, 'Selecione uma categoria')}
+          {renderSelectField('tipoCliente', 'Tipo Cliente', filterOptions.tiposCliente, 'Selecione um tipo')}
           {renderSelectField(
             'vendedor',
             'Vendedor',

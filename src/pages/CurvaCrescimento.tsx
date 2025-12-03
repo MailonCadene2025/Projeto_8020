@@ -193,7 +193,14 @@ const CurvaCrescimento: React.FC = () => {
 
         if (!match(activeFilters.cliente, item.nomeFantasia)) return false;
         if (!match(activeFilters.categoria, item.categoria)) return false;
-        if (!match(activeFilters.regional, item.regional)) return false;
+        // Exceção: gerente João vê vendas de João independentemente da regional
+        const norm = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+        const vendorsSelected = activeFilters.vendedor || undefined;
+        const passRegional = match(activeFilters.regional, item.regional) || (
+          isJoaoGerente && norm(item.vendedor) === 'joao' && (!vendorsSelected || vendorsSelected.includes(item.vendedor))
+        );
+        if (!passRegional) return false;
         if (!match(activeFilters.estado, item.uf)) return false;
         if (!match(activeFilters.cidade, item.cidade)) return false;
         if (!match(activeFilters.vendedor, item.vendedor)) return false;
@@ -227,7 +234,15 @@ const CurvaCrescimento: React.FC = () => {
     }
     setActiveFilters(cleared);
     const filtered = GoogleSheetsService.filterData(rawData as any, cleared as any) as any;
-    setFilteredData(filtered);
+    // Exceção João gerente ao limpar filtros
+    const norm = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+    const vendorsSelected = cleared.vendedor || undefined;
+    const extraJoao = isJoaoGerente
+      ? rawData.filter(i => norm(i.vendedor) === 'joao' && (!vendorsSelected || vendorsSelected.includes(i.vendedor)))
+      : [];
+    const combined = Array.from(new Set([...(filtered as HistoryData[]), ...extraJoao]));
+    setFilteredData(combined);
   };
 
   // Construir dados para gráfico: pontos mensais e linhas por ano

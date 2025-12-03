@@ -14,6 +14,7 @@ export interface FilterOptions {
   categoria: string[];
   vendedor: string[];
   regional: string[];
+  tiposCliente?: string[]; // opcional
 }
 
 export interface ActiveFilters {
@@ -25,6 +26,7 @@ export interface ActiveFilters {
   categoria?: string[];
   vendedor?: string[];
   regional?: string[];
+  tipoCliente?: string[]; // opcional
 }
 
 interface HistoryFiltersProps {
@@ -128,7 +130,17 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
             'Regional',
             filterOptions.regional,
             'Selecione uma regional',
-            (user?.role === 'gerente') || ['sara','joao'].includes(((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+            (user?.role === 'gerente') || ['sara','joao'].includes(((user?.username || '').toLowerCase().normalize('NFD').replace(/\[\u0300-\u036f]/g, '')))
+          )}
+
+          {/* Tipo de Cliente: renderiza somente se houver opções */}
+          {Array.isArray(filterOptions.tiposCliente) && filterOptions.tiposCliente.length > 0 && (
+            renderSelectField(
+              'tipoCliente',
+              'Tipo de Cliente',
+              filterOptions.tiposCliente,
+              'Selecione um tipo'
+            )
           )}
         </div>
 

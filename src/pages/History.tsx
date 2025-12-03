@@ -127,12 +127,20 @@ const History = () => {
             ];
             initialFilters.regional = locked;
             initialFilteredData = initialFilteredData.filter(item => locked.includes(item.regional));
+            // Exceção: gerente João vê vendas do vendedor João
+            const norm = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+            const vendorsSelected = initialFilters.vendedor || undefined;
+            const extraJoao = isJoaoGerente
+              ? historyData.filter(i => norm(i.vendedor) === 'joao' && (!vendorsSelected || vendorsSelected.includes(i.vendedor)))
+              : [];
+            initialFilteredData = Array.from(new Set([...initialFilteredData, ...extraJoao]));
           }
         }
 
         // Filtro automático para cliente pré-selecionado
         if (prefilledClient) {
-          initialFilters.cliente = prefilledClient;
+          initialFilters.cliente = [prefilledClient];
           initialFilteredData = initialFilteredData.filter(item => item.nomeFantasia === prefilledClient);
         }
 
@@ -183,7 +191,43 @@ const History = () => {
       if (!match(activeFilters.vendedor, item.vendedor)) return false;
       return true;
     });
-    setFilteredData(filtered);
+    // Exceção João gerente: unir vendas do vendedor João respeitando filtro de vendedor (se houver)
+    const norm = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const isJoaoGerente = (user?.role === 'gerente' && norm(user?.username || '') === 'joao');
+    const vendorsSelected = activeFilters.vendedor || undefined;
+    const extraJoao = isJoaoGerente
+      ? data.filter(i => {
+          if (norm(i.vendedor) !== 'joao') return false;
+          // Respeita filtro de vendedor se definido
+          if (vendorsSelected && vendorsSelected.length > 0 && !vendorsSelected.includes(i.vendedor)) return false;
+          // Reaplica demais filtros (exceto regional)
+          const match = (filterVal: string[] | undefined, candidate: string) => {
+            if (!filterVal) return true;
+            return filterVal.length === 0 ? true : filterVal.includes(candidate);
+          };
+          if (activeFilters.dataInicio) {
+            const itemDate = new Date(i.dataPedido.split('/').reverse().join('-'));
+            itemDate.setHours(0,0,0,0);
+            const startDate = new Date(activeFilters.dataInicio);
+            startDate.setHours(0,0,0,0);
+            if (itemDate < startDate) return false;
+          }
+          if (activeFilters.dataFim) {
+            const itemDate = new Date(i.dataPedido.split('/').reverse().join('-'));
+            itemDate.setHours(0,0,0,0);
+            const endDate = new Date(activeFilters.dataFim);
+            endDate.setHours(0,0,0,0);
+            if (itemDate > endDate) return false;
+          }
+          if (!match(activeFilters.cliente, i.nomeFantasia)) return false;
+          if (!match(activeFilters.categoria, i.categoria)) return false;
+          if (!match(activeFilters.estado, i.uf)) return false;
+          if (!match(activeFilters.cidade, i.cidade)) return false;
+          return true;
+        })
+      : [];
+    const combined = Array.from(new Set([...filtered, ...extraJoao]));
+    setFilteredData(combined);
   };
 
   const handleClearFilters = () => {
@@ -223,8 +267,17 @@ const History = () => {
         return true;
       });
     }
+
+    // Exceção João gerente
+    const norm2 = (s: string) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const isJoaoGerente2 = (user?.role === 'gerente' && norm2(user?.username || '') === 'joao');
+    const vendorsSelected2 = (clearedFilters as ActiveHistoryFilters).vendedor || undefined;
+    const extraJoao2 = isJoaoGerente2
+      ? data.filter(i => norm2(i.vendedor) === 'joao' && (!vendorsSelected2 || vendorsSelected2.includes(i.vendedor)))
+      : [];
+    const combined2 = Array.from(new Set([...dataToShow, ...extraJoao2]));
     
-    setFilteredData(dataToShow);
+    setFilteredData(combined2);
     
     const un = (user?.username || '').toLowerCase();
     const unNorm = un.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
