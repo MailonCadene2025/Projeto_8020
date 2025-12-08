@@ -45,8 +45,8 @@ const LeadsCRM: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
-  const [filterOptions, setFilterOptions] = useState<{ vendedores: string[]; status: string[]; ufs: string[]; produtos: string[]; equipes: string[]; empresas: string[] }>({ vendedores: [], status: [], ufs: [], produtos: [], equipes: [], empresas: [] });
-  const [activeFilters, setActiveFilters] = useState<{ dataInicio?: string; dataFim?: string; vendedor?: string[]; status?: string[]; uf?: string[]; produto?: string[]; equipe?: string[]; empresa?: string[] }>({});
+  const [filterOptions, setFilterOptions] = useState<{ vendedores: string[]; status: string[]; ufs: string[]; produtos: string[]; equipes: string[]; empresas: string[]; regionais: string[] }>({ vendedores: [], status: [], ufs: [], produtos: [], equipes: [], empresas: [], regionais: [] });
+  const [activeFilters, setActiveFilters] = useState<{ dataInicio?: string; dataFim?: string; vendedor?: string[]; status?: string[]; uf?: string[]; produto?: string[]; equipe?: string[]; empresa?: string[]; regional?: string[] }>({});
   const [filtersCollapsed, setFiltersCollapsed] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -70,9 +70,10 @@ const LeadsCRM: React.FC = () => {
         const produtoValues = [...new Set(leads.map(l => l.produto).filter(Boolean))].sort();
         const equipeValues = [...new Set(leads.map(l => l.equipe).filter(Boolean))].sort();
         const empresaValues = [...new Set(leads.map(l => l.empresa).filter(Boolean))].sort();
+        const regionalValues = [...new Set(leads.map(l => l.regional).filter(Boolean))].sort();
 
         const vendedoresOptions = user && user.role === 'vendedor' && user.vendedor ? [user.vendedor] : allVendedores;
-        setFilterOptions({ vendedores: vendedoresOptions, status: statusValues, ufs: ufValues, produtos: produtoValues, equipes: equipeValues, empresas: empresaValues });
+        setFilterOptions({ vendedores: vendedoresOptions, status: statusValues, ufs: ufValues, produtos: produtoValues, equipes: equipeValues, empresas: empresaValues, regionais: regionalValues });
 
         // Aplicar filtro de vendedor automaticamente
         let initialFilters: { vendedor?: string; status?: string; dataInicio?: string; dataFim?: string; equipe?: string } = {};
@@ -157,6 +158,7 @@ const LeadsCRM: React.FC = () => {
       if (!match(activeFilters.produto, lead.produto)) return false;
       if (!match(activeFilters.equipe, lead.equipe)) return false;
       if (!match(activeFilters.empresa, lead.empresa)) return false;
+      if (!match(activeFilters.regional, lead.regional)) return false;
 
       // Filtro por data (dataCriacao pode estar em DD/MM/YYYY)
       if (activeFilters.dataInicio || activeFilters.dataFim) {
@@ -189,7 +191,7 @@ const LeadsCRM: React.FC = () => {
   };
 
   const clearFilters = () => {
-    let cleared: { dataInicio?: string; dataFim?: string; vendedor?: string[]; status?: string[]; uf?: string[]; produto?: string[]; equipe?: string[]; empresa?: string[] } = {};
+    let cleared: { dataInicio?: string; dataFim?: string; vendedor?: string[]; status?: string[]; uf?: string[]; produto?: string[]; equipe?: string[]; empresa?: string[]; regional?: string[] } = {};
     if (user && user.role === 'vendedor' && user.vendedor) {
       cleared.vendedor = [user.vendedor];
     }
@@ -303,6 +305,7 @@ const LeadsCRM: React.FC = () => {
   const produtoOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.produtos.map(p => ({ value: p, label: p }))];
   const equipeOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.equipes.map(e => ({ value: e, label: e }))];
   const empresaOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.empresas.map(e => ({ value: e, label: e }))];
+  const regionalOptions: ComboboxOption[] = [{ value: '__ALL__', label: 'Todos' }, ...filterOptions.regionais.map(r => ({ value: r, label: r }))];
 
   const paginated = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -489,31 +492,43 @@ const LeadsCRM: React.FC = () => {
                     noResultsMessage="Nenhum resultado encontrado."
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Equipes</label>
-                  <Combobox
-                    multiple
-                    options={equipeOptions}
-                    values={activeFilters.equipe || []}
-                    onChangeValues={(values) => setActiveFilters({ ...activeFilters, equipe: values && values.length > 0 ? values : undefined })}
-                    placeholder="Selecionar equipe"
-                    searchPlaceholder="Pesquisar..."
-                    noResultsMessage="Nenhum resultado encontrado."
-                    disabled={['rodrigo','sandro','joao'].includes(user?.username?.toLowerCase() || '')}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Empresa</label>
-                  <Combobox
-                    multiple
-                    options={empresaOptions}
-                    values={activeFilters.empresa || []}
-                    onChangeValues={(values) => setActiveFilters({ ...activeFilters, empresa: values && values.length > 0 ? values : undefined })}
-                    placeholder="Selecionar empresa"
-                    searchPlaceholder="Pesquisar..."
-                    noResultsMessage="Nenhum resultado encontrado."
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Equipes</label>
+                <Combobox
+                  multiple
+                  options={equipeOptions}
+                  values={activeFilters.equipe || []}
+                  onChangeValues={(values) => setActiveFilters({ ...activeFilters, equipe: values && values.length > 0 ? values : undefined })}
+                  placeholder="Selecionar equipe"
+                  searchPlaceholder="Pesquisar..."
+                  noResultsMessage="Nenhum resultado encontrado."
+                  disabled={['rodrigo','sandro','joao'].includes(user?.username?.toLowerCase() || '')}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Regional</label>
+                <Combobox
+                  multiple
+                  options={regionalOptions}
+                  values={activeFilters.regional || []}
+                  onChangeValues={(values) => setActiveFilters({ ...activeFilters, regional: values && values.length > 0 ? values : undefined })}
+                  placeholder="Selecionar regional"
+                  searchPlaceholder="Pesquisar..."
+                  noResultsMessage="Nenhum resultado encontrado."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: '#64748b' }}>Empresa</label>
+                <Combobox
+                  multiple
+                  options={empresaOptions}
+                  values={activeFilters.empresa || []}
+                  onChangeValues={(values) => setActiveFilters({ ...activeFilters, empresa: values && values.length > 0 ? values : undefined })}
+                  placeholder="Selecionar empresa"
+                  searchPlaceholder="Pesquisar..."
+                  noResultsMessage="Nenhum resultado encontrado."
+                />
+              </div>
               </div>
               <div className="flex gap-2">
                 <Button onClick={applyFilters}>Aplicar Filtros</Button>
@@ -541,6 +556,7 @@ const LeadsCRM: React.FC = () => {
                   { label: 'Produto', value: (l) => l.produto },
                   { label: 'Empresa', value: (l) => l.empresa },
                   { label: 'Vendedor', value: (l) => l.vendedor },
+                  { label: 'Regional', value: (l) => l.regional },
                   { label: 'Etapa do Funil', value: (l) => l.etapaFunil },
                   { label: 'Status', value: (l) => l.estadoNegociacao },
                   { label: 'Ticket Médio', value: (l) => (l.ticketMedio || 0).toFixed(2) },
