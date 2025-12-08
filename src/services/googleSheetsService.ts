@@ -54,6 +54,7 @@ export interface LeadData {
   endereco: string;
   cidade: string;
   uf: string;
+  regional: string;
   vendedor: string;
   equipe: string;
   etapaFunil: string;
@@ -252,6 +253,10 @@ export class GoogleSheetsService {
         dataCriacao: row[15] || '',
         fonte: row[16] || '',
         campanha: row[17] || '',
+        // Coluna S: Regional (conforme pedido do usuário)
+        regional: row[18] || '',
+        // Caso a planilha mantenha valor de campanha em S, manteremos o parse;
+        // se S for texto de regional, este valor será 0.
         valorCampanha: this.parseValue(row[18] || '0'),
         valorUsado: this.parseValue(row[19] || '0'),
         vendedor: row[20] || '',
