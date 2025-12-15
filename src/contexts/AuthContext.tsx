@@ -29,6 +29,7 @@ const users = [
   { username: 'Pedro', password: 'pedro@753', role: 'vendedor' as const, vendedor: 'PEDRO' },
   { username: 'Rocha', password: 'rocha@753', role: 'vendedor' as const, vendedor: 'ROCHA' },
   { username: 'Pieri', password: 'pieri@753', role: 'vendedor' as const, vendedor: 'PIERI' },
+  { username: 'Willian', password: 'willian@753', role: 'vendedor' as const, vendedor: 'WILLIAN' },
   // Usuário específico com travas de filtros personalizadas
   { username: 'Rodrigo', password: 'rodrigo@951', role: 'gerente' as const },
   // Usuário específico Sandro com travas personalizadas
