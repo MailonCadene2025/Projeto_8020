@@ -49,7 +49,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      // Validate against current users list to ensure permissions are up to date
+      const foundUser = users.find(u => u.username === parsedUser.username);
+      
+      if (foundUser) {
+        const userData: User = {
+          username: foundUser.username,
+          role: foundUser.role,
+          vendedor: foundUser.vendedor
+        };
+        setUser(userData);
+        // Update local storage with fresh data
+        localStorage.setItem('user', JSON.stringify(userData));
+      } else {
+        // User no longer exists, clear session
+        setUser(null);
+        localStorage.removeItem('user');
+      }
     }
   }, []);
 

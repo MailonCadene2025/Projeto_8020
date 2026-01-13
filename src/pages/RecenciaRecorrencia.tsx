@@ -177,9 +177,9 @@ const RecenciaRecorrencia: React.FC = () => {
         if (user && user.role === 'vendedor' && user.vendedor && un !== 'sara') {
           initialFilters.vendedor = [user.vendedor];
         }
-        if ((user && user.role === 'gerente') || un === 'sara') {
+        if ((user && user.role === 'gerente') || un === 'sara' || un === 'luiz') {
           const allowed = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
-            un === 'rodrigo' ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
+            (un === 'rodrigo' || un === 'luiz') ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
           ];
           initialFilters.regional = allowed;
         }

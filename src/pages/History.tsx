@@ -135,9 +135,9 @@ const History = () => {
             regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
           );
           const wantsTwoThree = unNorm === 'joao' || unNorm === 'sara';
-          if ((user && user.role === 'gerente') || unNorm === 'sara') {
+          if ((user && user.role === 'gerente') || unNorm === 'sara' || unNorm === 'luiz') {
             const locked = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
-              unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+              (unNorm === 'rodrigo' || unNorm === 'luiz') ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
             ];
             initialFilters.regional = locked;
             initialFilteredData = initialFilteredData.filter(item => locked.includes(item.regional));

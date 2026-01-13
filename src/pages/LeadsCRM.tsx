@@ -84,7 +84,7 @@ const LeadsCRM: React.FC = () => {
         }
 
         // Trava de equipe para o usuário Rodrigo
-        const isRodrigo = user?.username?.toLowerCase() === 'rodrigo';
+        const isRodrigo = user?.username?.toLowerCase() === 'rodrigo' || user?.username?.toLowerCase() === 'luiz';
         if (isRodrigo) {
           const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, '').replace(/[\-/]/g, '');
           const targetLabel = 'equiperodrigomsmtroac';
@@ -451,7 +451,7 @@ const LeadsCRM: React.FC = () => {
                     placeholder="Selecionar vendedor"
                     searchPlaceholder="Pesquisar..."
                     noResultsMessage="Nenhum resultado encontrado."
-                    disabled={user?.role === 'vendedor'}
+                    disabled={user?.role === 'vendedor' && user?.username?.toLowerCase() !== 'luiz'}
                   />
                 </div>
                 <div>
@@ -515,6 +515,7 @@ const LeadsCRM: React.FC = () => {
                   placeholder="Selecionar regional"
                   searchPlaceholder="Pesquisar..."
                   noResultsMessage="Nenhum resultado encontrado."
+                  disabled={['rodrigo','sandro','joao','luiz'].includes(user?.username?.toLowerCase() || '')}
                 />
               </div>
               <div>

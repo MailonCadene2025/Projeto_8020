@@ -100,14 +100,14 @@ export const YearOverYearFilters: React.FC<YearOverYearFiltersProps> = ({
             'Vendedor',
             filterOptions.vendedor,
             'Selecione um vendedor',
-            user?.role === 'vendedor' && ((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') !== 'sara')
+            user?.role === 'vendedor' && !['sara', 'luiz'].includes((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
           )}
           {renderSelectField(
             'regional',
             'Regional',
             filterOptions.regional,
             'Selecione uma regional',
-            (user?.role === 'gerente') || ['sara','joao'].includes(((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
+            (user?.role === 'gerente') || ['sara','joao','luiz'].includes(((user?.username || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')))
           )}
         </div>
 
