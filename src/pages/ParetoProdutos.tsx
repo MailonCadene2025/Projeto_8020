@@ -95,9 +95,9 @@ const ParetoProdutos = () => {
         filtersToApply = { vendedor: [user.vendedor] };
       }
 
-      if ((user && user.role === 'gerente') || unNorm === 'sara') {
+      if ((user && user.role === 'gerente') || unNorm === 'sara' || unNorm === 'luiz') {
         const locked = (unNorm === 'joao' || unNorm === 'sara') ? [pickRegional('2'), pickRegional('3')] : [
-          unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+          (unNorm === 'rodrigo' || unNorm === 'luiz') ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
         ];
         filtersToApply = { ...filtersToApply, regional: locked };
       }

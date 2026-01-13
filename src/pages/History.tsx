@@ -267,9 +267,9 @@ const History = () => {
         regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
       );
       const wantsTwoThree = unNorm === 'joao' || unNorm === 'sara';
-      if ((user && user.role === 'gerente') || unNorm === 'sara') {
+      if ((user && user.role === 'gerente') || unNorm === 'sara' || unNorm === 'luiz') {
         (clearedFilters as ActiveHistoryFilters).regional = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
-          unNorm === 'rodrigo' ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
+          (unNorm === 'rodrigo' || unNorm === 'luiz') ? pickRegional('4') : (unNorm === 'sandro' ? pickRegional('1') : pickRegional('3'))
         ];
       }
     }
@@ -305,7 +305,7 @@ const History = () => {
       description: user?.role === 'vendedor' 
         ? "Filtros limpos. Filtro de vendedor mantido."
         : (user?.role === 'gerente' || unNorm === 'sara') 
-          ? (unNorm === 'joao' || unNorm === 'sara' ? "Filtros limpos. Regionais 2 e 3 mantidas." : (unNorm === 'rodrigo' ? "Filtros limpos. Regional 4 mantida." : (unNorm === 'sandro' ? "Filtros limpos. Regional 1 mantida." : "Filtros limpos. Regional 3 mantida.")))
+          ? (unNorm === 'joao' || unNorm === 'sara' ? "Filtros limpos. Regionais 2 e 3 mantidas." : ((unNorm === 'rodrigo' || unNorm === 'luiz') ? "Filtros limpos. Regional 4 mantida." : (unNorm === 'sandro' ? "Filtros limpos. Regional 1 mantida." : "Filtros limpos. Regional 3 mantida.")))
           : "Mostrando todos os dados disponíveis.",
     });
   };

@@ -22,7 +22,7 @@ const users = [
   { username: 'joao', password: 'joao@951', role: 'gerente' as const },
   { username: 'Nara', password: 'Nara@753', role: 'vendedor' as const, vendedor: 'NARA' },
   { username: 'Matheus', password: 'matheus@753', role: 'vendedor' as const, vendedor: 'MATHEUS' },
-  { username: 'Luiz', password: 'luiz@753', role: 'vendedor' as const, vendedor: 'LUIZ' },
+  { username: 'Luiz', password: 'luiz@753', role: 'vendedor' as const },
   { username: 'Sara', password: 'sara@753', role: 'vendedor' as const, vendedor: 'SARA' },
   { username: 'Itacir', password: 'itacir@753', role: 'vendedor' as const, vendedor: 'ITACIR' },
   { username: 'Daniel', password: 'daniel@753', role: 'vendedor' as const, vendedor: 'DANIEL' },

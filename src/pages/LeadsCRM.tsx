@@ -502,7 +502,7 @@ const LeadsCRM: React.FC = () => {
                   placeholder="Selecionar equipe"
                   searchPlaceholder="Pesquisar..."
                   noResultsMessage="Nenhum resultado encontrado."
-                  disabled={['rodrigo','sandro','joao'].includes(user?.username?.toLowerCase() || '')}
+                  disabled={['rodrigo','sandro','joao','luiz'].includes(user?.username?.toLowerCase() || '')}
                 />
               </div>
               <div>

@@ -127,9 +127,9 @@ const RecenciaRecorrencia: React.FC = () => {
           regionais.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
         );
         const wantsTwoThree = un === 'joao' || un === 'sara';
-        if ((user && user.role === 'gerente') || un === 'sara') {
+        if ((user && user.role === 'gerente') || un === 'sara' || un === 'luiz') {
           const allowed = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
-            un === 'rodrigo' ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
+            (un === 'rodrigo' || un === 'luiz') ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
           ];
           base = base.filter(i => allowed.includes(i.regional));
 
@@ -414,9 +414,9 @@ const RecenciaRecorrencia: React.FC = () => {
       regionais.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
     );
     const wantsTwoThree = un === 'joao' || un === 'sara';
-    if ((user && user.role === 'gerente') || un === 'sara') {
+    if ((user && user.role === 'gerente') || un === 'sara' || un === 'luiz') {
       cleared.regional = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
-        un === 'rodrigo' ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
+        (un === 'rodrigo' || un === 'luiz') ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
       ];
     }
     setActiveFilters(cleared);
@@ -424,7 +424,7 @@ const RecenciaRecorrencia: React.FC = () => {
     const msg = (user?.role === 'vendedor')
       ? 'Filtros limpos. Filtro de vendedor mantido.'
       : ((user?.role === 'gerente' || un === 'sara')
-        ? (wantsTwoThree ? 'Filtros limpos. Regionais 2 e 3 mantidas.' : (un === 'rodrigo' ? 'Filtros limpos. Regional 4 mantida.' : (un === 'sandro' ? 'Filtros limpos. Regional 1 mantida.' : 'Filtros limpos. Regional 3 mantida.')))
+        ? (wantsTwoThree ? 'Filtros limpos. Regionais 2 e 3 mantidas.' : ((un === 'rodrigo' || un === 'luiz') ? 'Filtros limpos. Regional 4 mantida.' : (un === 'sandro' ? 'Filtros limpos. Regional 1 mantida.' : 'Filtros limpos. Regional 3 mantida.')))
         : 'Mostrando todos os dados disponíveis.');
     toast({ title: 'Filtros limpos', description: msg });
   };

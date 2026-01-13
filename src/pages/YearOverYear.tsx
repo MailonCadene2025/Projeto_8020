@@ -97,11 +97,11 @@ const YearOverYear = () => {
           regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
         );
         const wantsTwoThree = un === 'joao' || un === 'sara';
-        if ((user && user.role === 'gerente') || un === 'sara') {
+        if ((user && user.role === 'gerente') || un === 'sara' || un === 'luiz') {
           if (wantsTwoThree) {
             initialFilters.regional = [pickRegional('2'), pickRegional('3')];
           } else {
-            const isRodrigo = un === 'rodrigo';
+            const isRodrigo = un === 'rodrigo' || un === 'luiz';
             const isSandro = un === 'sandro';
             const regionalAlvo = isRodrigo
               ? pickRegional('4')
@@ -249,9 +249,9 @@ const YearOverYear = () => {
         regionaisOpts.find(r => normalize(r) === `regional${label}` || normalize(r) === `regiao${label}` || r === label) || `Regional ${label}`
       );
       const wantsTwoThree = un === 'joao' || un === 'sara';
-      if ((user && user.role === 'gerente') || un === 'sara') {
+      if ((user && user.role === 'gerente') || un === 'sara' || un === 'luiz') {
         clearedFilters.regional = wantsTwoThree ? [pickRegional('2'), pickRegional('3')] : [
-          un === 'rodrigo' ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
+          (un === 'rodrigo' || un === 'luiz') ? pickRegional('4') : (un === 'sandro' ? pickRegional('1') : pickRegional('3'))
         ];
       }
     }
