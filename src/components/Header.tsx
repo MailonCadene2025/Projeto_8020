@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent } from '@/components/ui/navigation-menu';
-import { Users, Package, History as HistoryIcon, Timer, LineChart, BarChart3, Gift, ListChecks } from 'lucide-react';
+import { Users, Package, History as HistoryIcon, Timer, LineChart, BarChart3, Gift, ListChecks, DollarSign } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ export const Header: React.FC = () => {
 
   const isActive = (path: string) => location.pathname.startsWith(path);
   const isParetoActive = ['/pareto-clientes', '/pareto-produtos'].some(p => isActive(p));
-  const isReportsActive = ['/history', '/recencia-recorrencia', '/year-over-year', '/curva-crescimento', '/demo-comodatos'].some(p => isActive(p));
+  const isReportsActive = ['/history', '/recencia-recorrencia', '/year-over-year', '/curva-crescimento', '/demo-comodatos', '/despesas'].some(p => isActive(p));
 
   return (
     <header className="bg-white border-b shadow-sm px-6 py-4">
@@ -95,6 +95,15 @@ export const Header: React.FC = () => {
                     >
                       <Gift className="mr-2 h-4 w-4" /> Demonstrações
                     </Button>
+                    {user?.role !== 'vendedor' && (
+                      <Button
+                        variant="ghost"
+                        className={`justify-start ${isActive('/despesas') ? 'bg-slate-100 text-green-600' : ''}`}
+                        onClick={() => navigate('/despesas')}
+                      >
+                        <DollarSign className="mr-2 h-4 w-4" /> Despesas
+                      </Button>
+                    )}
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>

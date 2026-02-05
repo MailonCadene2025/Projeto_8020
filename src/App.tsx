@@ -17,6 +17,7 @@ import LeadsCRM from "./pages/LeadsCRM";
 import Unauthorized from "./pages/Unauthorized";
 import CurvaCrescimento from "./pages/CurvaCrescimento";
 import RecenciaRecorrencia from "./pages/RecenciaRecorrencia";
+import ExpensesPage from "./pages/ExpensesPage";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +98,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["admin","gerente","vendedor","marketing"]}>
                   <LeadsCRM />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/despesas" 
+              element={
+                <ProtectedRoute allowedRoles={["admin","gerente"]}>
+                  <ExpensesPage />
                 </ProtectedRoute>
               } 
             />
